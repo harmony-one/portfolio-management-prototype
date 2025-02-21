@@ -6,3 +6,15 @@ export interface Asset {
   portfolioPercentage: number;
   rebalancingTarget?: number;
 }
+
+export interface Transaction {
+  id: string;
+  timestamp: Date;
+  fromSymbol: string;
+  toSymbol: string;
+  fromAmount: number;
+  toAmount: number;
+  usdValue: number;
+  status: 'pending' | 'completed' | 'failed';
+}
+

@@ -4,6 +4,7 @@ import { usePortfolio } from '../../hooks/usePortfolio';
 import { formatTokenAmount, formatCurrency, formatPercentage } from '@/app/lib/utils/numberUtils';
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import { TransactionHistory } from './TransactionHistory';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -18,11 +19,11 @@ export function PortfolioGrid() {
     error, 
     updateRebalancingTargets, 
     rebalancePortfolio,
-    // CHANGE: Added new states from hook
     isRebalancing,
     isExecutingSwaps,
     startRebalancing,
-    cancelRebalancing 
+    cancelRebalancing,
+    transactions
   } = usePortfolio();
 
    const { 
@@ -242,6 +243,9 @@ export function PortfolioGrid() {
         >
           Buy Asset
         </button>
+      </div>
+      <div className="mt-8">
+        <TransactionHistory transactions={transactions} />
       </div>
     </div>
   )

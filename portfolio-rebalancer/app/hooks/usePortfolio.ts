@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { type PublicClient, type WalletClient } from 'viem'
 import { buildPortfolioServiceClient, SUPPORTED_ASSETS, type AssetBalance } from '@/app/lib/web3/api'
+import { Transaction } from '../types/portfolio';
 
 export interface Asset extends AssetBalance {
   totalValue?: number;
@@ -22,7 +23,9 @@ interface SwapPair {
 const logPortfolioState = (assets: Asset[], title: string) => {
   console.group(title);
   assets.forEach(asset => {
-    console.log(`${asset.symbol}: ${asset.portfolioPercentage?.toFixed(2)}% (${asset.totalValue?.toFixed(2)})`);
+    if ((asset.totalValue || 0) > 0) {
+      console.log(`${asset.symbol}: ${asset.portfolioPercentage?.toFixed(2)}% ($${asset.totalValue?.toFixed(2)})`);
+    }
   });
   console.groupEnd();
 };
@@ -37,20 +40,13 @@ interface UsePortfolioReturn {
   pendingSwaps: SwapPair[];
   isRebalancing: boolean;
   isExecutingSwaps: boolean;
+  transactions: Transaction[];
   startRebalancing: () => void;
   cancelRebalancing: () => void;
 }
 
-const mockSwap = async (from: Asset, to: Asset, fromAmount: number, toAmount: number, usdValue: number): Promise<boolean> => {
-  console.group(`Executing Swap`);
-  console.log(`From: ${fromAmount.toFixed(4)} ${from.symbol} (${usdValue.toFixed(2)})`);
-  console.log(`To: ${toAmount.toFixed(4)} ${to.symbol} (${usdValue.toFixed(2)})`);
-  console.groupEnd();
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-  return true;
-};
-
 export function usePortfolio(): UsePortfolioReturn {
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isExecutingSwaps, setIsExecutingSwaps] = useState(false);
   const { address, isConnected } = useAccount();
@@ -128,9 +124,40 @@ export function usePortfolio(): UsePortfolioReturn {
     );
   };
 
+  const mockSwap = async (from: Asset, to: Asset, fromAmount: number, toAmount: number, usdValue: number): Promise<boolean> => {
+    console.group(`Executing Swap`);
+    console.log(`From: ${fromAmount.toFixed(4)} ${from.symbol} (${usdValue.toFixed(2)})`);
+    console.log(`To: ${toAmount.toFixed(4)} ${to.symbol} (${usdValue.toFixed(2)})`);
+    console.groupEnd();
+    const txId = Math.random().toString(36).substr(2, 9);
+    const newTransaction: Transaction = {
+      id: txId,
+      timestamp: new Date(),
+      fromSymbol: from.symbol,
+      toSymbol: to.symbol,
+      fromAmount,
+      toAmount,
+      usdValue,
+      status: 'pending'
+    };
+    setTransactions(prev => [newTransaction, ...prev]);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Update transaction status to completed
+      setTransactions(prev => 
+        prev.map(tx => 
+          tx.id === txId 
+            ? { ...tx, status: 'completed' }
+            : tx
+        )
+      );
+      
+    return true;
+  };
+
   const calculateSwaps = (currentAssets: Asset[]): SwapPair[] => {
     console.group('Starting Rebalance Calculation');
-    logPortfolioState(currentAssets, 'Current Portfolio State');
+    logPortfolioState(currentAssets, 'Initial Portfolio Distribution');
     const totalPortfolioValue = currentAssets.reduce(
       (sum, asset) => sum + (asset.totalValue || 0),
       0
@@ -185,75 +212,69 @@ export function usePortfolio(): UsePortfolioReturn {
         }
       });
     });
-
-    console.group('Required Swaps');
-    swaps.forEach((swap, index) => {
-      console.log(`Swap ${index + 1}:`,
-        `\n  From: ${swap.fromAmount.toFixed(4)} ${swap.from.symbol}`,
-        `\n  To: ${swap.toAmount.toFixed(4)} ${swap.to.symbol}`,
-        `\n  USD Value: ${swap.usdValue.toFixed(2)}`
-      );
-    });
-    console.groupEnd();
-    
-    // Log target state
-    const targetState = currentAssets.map(asset => ({
-      ...asset,
-      portfolioPercentage: asset.rebalancingTarget || 0
-    }));
-    logPortfolioState(targetState, 'Target Portfolio State');
-    
-    console.groupEnd(); // End Rebalance Calculation
+  
     return swaps;
   };
 
   const rebalancePortfolio = async () => {
     if (!isConnected) return;
-
+  
     try {
       setIsExecutingSwaps(true);
-      const swaps = calculateSwaps(assets);
+      let simulatedAssets = [...assets];
+      const swaps = calculateSwaps(simulatedAssets);
       setPendingSwaps(swaps);
-
+  
       // Execute swaps sequentially
       for (const swap of swaps) {
         const success = await mockSwap(swap.from, swap.to, swap.fromAmount, swap.toAmount, swap.usdValue);
         if (!success) {
           throw new Error(`Failed to swap ${swap.from.symbol} to ${swap.to.symbol}`);
         }
+  
+        // Update simulated balances after each swap
+        simulatedAssets = simulatedAssets.map(asset => {
+          if (asset.symbol === swap.from.symbol) {
+            const newAmount = parseFloat(asset.formattedAmount) - swap.fromAmount;
+            return {
+              ...asset,
+              formattedAmount: newAmount.toString(),
+              totalValue: (asset.totalValue || 0) - swap.usdValue
+            };
+          }
+          if (asset.symbol === swap.to.symbol) {
+            const newAmount = asset.symbol === 'USDT' ? 
+              (parseFloat(asset.formattedAmount) + swap.usdValue) : 
+              (parseFloat(asset.formattedAmount) + swap.toAmount);
+            
+            return {
+              ...asset,
+              formattedAmount: newAmount.toString(),
+              totalValue: (asset.totalValue || 0) + swap.usdValue
+            };
+          }
+          return asset;
+        });
       }
-
-      // Refresh balances after swaps
-      const portfolioService = buildPortfolioServiceClient({ publicClient, walletClient });
-      const balances = await portfolioService.getAllBalances(address!);
-      const assetsWithValue = await enrichWithPrices(balances);
+  
+      // Recalculate percentages including zero balances
+      const totalValue = simulatedAssets.reduce((sum, asset) => sum + (asset.totalValue || 0), 0);
       
-      // Log final portfolio state
-      console.group('Rebalancing Complete');
-      console.log('Final Portfolio State After Swaps:');
-      logPortfolioState(assetsWithValue, 'Actual Portfolio State');
-      
-      // Calculate and log deviations from target
-      console.group('Deviations from Target');
-      assetsWithValue.forEach(asset => {
-        const targetPercent = asset.rebalancingTarget || 0;
-        const actualPercent = asset.portfolioPercentage || 0;
-        const deviation = actualPercent - targetPercent;
-        console.log(
-          `${asset.symbol}: Target ${targetPercent.toFixed(2)}% vs Actual ${actualPercent.toFixed(2)}%`,
-          `(Deviation: ${deviation > 0 ? '+' : ''}${deviation.toFixed(2)}%)`
-        );
-      });
-      console.groupEnd();
-      console.groupEnd();
-
-      setAssets(assetsWithValue);
+      // Reset rebalancing targets and update percentages
+      simulatedAssets = simulatedAssets.map(asset => ({
+        ...asset,
+        portfolioPercentage: totalValue > 0 ? ((asset.totalValue || 0) / totalValue) * 100 : 0,
+        rebalancingTarget: 0 // Reset target to 0
+      }));
+  
+      console.log('Final distribution:', simulatedAssets);
+      setAssets(simulatedAssets);
       setPendingSwaps([]);
-      setIsRebalancing(false); // Reset rebalancing mode
+      setIsRebalancing(false);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Rebalancing failed'));
     } finally {
-      setIsExecutingSwaps(false); // Reset executing state instead of loading
+      setIsExecutingSwaps(false);
     }
   };
   
@@ -279,6 +300,7 @@ export function usePortfolio(): UsePortfolioReturn {
     pendingSwaps,
     isRebalancing,
     isExecutingSwaps,
+    transactions,
     startRebalancing,
     cancelRebalancing
   };
