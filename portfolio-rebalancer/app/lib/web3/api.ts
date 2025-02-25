@@ -1,41 +1,11 @@
 // lib/web3/portfolioService.ts
 import { Address, erc20Abi, formatUnits } from 'viem';
 import { type PublicClient, type WalletClient } from 'viem'
-
-export interface SupportedAsset {
-  symbol: string;
-  chain: string;
-  decimals: number;
-  address: string;
-}
+import { TokenInfo } from './types';
+import { TokenWithPrice } from '@/app/hooks/useTokensWithPrices';
 
 // Configuration for supported assets
-export const SUPPORTED_ASSETS: SupportedAsset[] = [
-  {
-    symbol: 'ONE',
-    chain: 'Harmony',
-    decimals: 18,
-    address: '0x0000000000000000000000000000000000000000' // Native token
-  },
-  {
-    symbol: 'USDT',
-    chain: 'Harmony',
-    decimals: 6,
-    address: '0x3C2B8Be99c50593081EAA2A724F0B8285F5aba8f'
-  },
-  {
-    symbol: 'BTC',
-    chain: 'Harmony',
-    decimals: 8,
-    address: '0x3095c7557bCb296ccc6e363DE01b760bA031F2d9'
-  },
-  {
-    symbol: 'wONE',
-    chain: 'Harmony',
-    decimals: 18,
-    address: '0xcF664087a5bB0237a0BAd6742852ec6c8d69A27a' // Native token
-  }
-];
+
 
 export interface AssetBalance {
   symbol: string;
@@ -60,9 +30,11 @@ interface PortfolioServiceClient {
 }
 
 export const buildPortfolioServiceClient = ({ 
+  supportedAssets,
   publicClient,
-  walletClient = null 
+  walletClient = null
 }: { 
+  supportedAssets: TokenWithPrice[],
   publicClient: PublicClient;
   walletClient: WalletClient | null;
 }): PortfolioServiceClient => {
@@ -74,8 +46,8 @@ export const buildPortfolioServiceClient = ({
   };
 
   const readTokenBalance = async (
-    asset: SupportedAsset, 
-    address: Address
+    asset: TokenInfo, 
+    address: Address,
   ): Promise<AssetBalance> => {
     try {
       let balance: bigint;
@@ -117,7 +89,7 @@ export const buildPortfolioServiceClient = ({
       }
 
       const balances = await Promise.all(
-        SUPPORTED_ASSETS.map(asset => readTokenBalance(asset, address))
+        supportedAssets.map((asset: TokenInfo) => readTokenBalance(asset, address))
       );
 
       return balances;

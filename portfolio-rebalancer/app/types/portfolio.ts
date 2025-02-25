@@ -18,3 +18,9 @@ export interface Transaction {
   status: 'pending' | 'completed' | 'failed';
 }
 
+export interface SupportedAsset {
+  symbol: string;
+  chain: string;
+  decimals: number;
+  address: string;
+}

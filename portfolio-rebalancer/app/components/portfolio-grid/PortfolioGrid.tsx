@@ -5,6 +5,7 @@ import { formatTokenAmount, formatCurrency, formatPercentage } from '@/app/lib/u
 import { useState, useEffect, useMemo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { TransactionHistory } from './TransactionHistory';
+import { RefreshCw } from 'lucide-react';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -21,57 +22,66 @@ export function PortfolioGrid() {
     rebalancePortfolio,
     isRebalancing,
     isExecutingSwaps,
-    startRebalancing,
     cancelRebalancing,
-    transactions
+    transactions,
+    lastPriceUpdate,    
+    isPriceRefreshing, 
+    refreshPortfolio    
   } = usePortfolio();
 
-   const { 
-    totalPortfolioValue, 
-    portfolioData, 
-    targetSum,
-    isTargetValid 
-  } = useMemo(() => {
+  const portfolioStats = useMemo(() => {
+    // Step 1: Filter for non-zero assets and calculate total portfolio value first
     const nonZeroAssets = assets.filter(asset => (asset.totalValue || 0) > 0);
-    const total = nonZeroAssets.reduce(
+    const portfolioTotal = nonZeroAssets.reduce(
       (sum, asset) => sum + (asset.totalValue || 0), 
       0
     );
-
-    let data = assets.map(asset => {
+  
+    // Step 2: Map assets to include portfolio percentages
+    const assetsWithPercentages = assets.map(asset => {
       const hasValue = (asset.totalValue || 0) > 0;
       const percentage = hasValue 
-        ? ((asset.totalValue || 0) / total) * 100 
+        ? ((asset.totalValue || 0) / portfolioTotal) * 100 
         : 0;
-
+  
       return {
         ...asset,
         hasValue,
         portfolioPercentage: percentage
       };
     });
-
-    if (hideZeroBalances) {
-      data = data.filter(asset => asset.hasValue);
-    }
-
-    const sortedData = [...data].sort((a, b) => {
+  
+    // Step 3: Filter for zero balances if needed
+    const filteredAssets = hideZeroBalances 
+      ? assetsWithPercentages.filter(asset => asset.hasValue)
+      : assetsWithPercentages;
+  
+    // Step 4: Sort the assets
+    const sortedData = [...filteredAssets].sort((a, b) => {
       const comparison = (b.portfolioPercentage || 0) - (a.portfolioPercentage || 0);
       return sortDirection === 'asc' ? -comparison : comparison;
     });
-
+  
+    // Step 5: Calculate target sum and determine if targets are valid
     const targetSum = sortedData.reduce(
-      (sum, asset) => sum + (asset.rebalancingTarget || 0),
+      (acc, asset) => acc + (asset.rebalancingTarget || 0),
       0
     );
-
+  
+    const hasAnyTargets = sortedData.some(asset => (asset.rebalancingTarget || 0) > 0);
+  
+    // Step 6: Return all calculated values
     return {
-      totalPortfolioValue: total,
+      totalPortfolioValue: portfolioTotal,
       portfolioData: sortedData,
       targetSum,
-      isTargetValid: Math.abs(targetSum - 100) < 0.01
+      isTargetValid: Math.abs(targetSum - 100) < 0.01,
+      hasTargets: hasAnyTargets
     };
-  }, [assets, sortDirection, hideZeroBalances]);
+  }, [assets, hideZeroBalances, sortDirection]);
+  
+  // Then use the values from the object directly
+  const { portfolioData, totalPortfolioValue, targetSum, isTargetValid, hasTargets } = portfolioStats;
 
   useEffect(() => {
     setMounted(true);
@@ -82,17 +92,7 @@ export function PortfolioGrid() {
   };
 
   const handleRebalanceClick = () => {
-    if (!isRebalancing) {
-      // Start rebalancing mode
-      startRebalancing();
-      // Set initial targets to current percentages
-      const currentTargets = portfolioData.reduce((acc, asset) => ({
-        ...acc,
-        [asset.symbol]: Math.round(asset.portfolioPercentage || 0)
-      }), {});
-      updateRebalancingTargets(currentTargets);
-    } else if (isTargetValid) {
-      // Execute rebalancing
+    if (isTargetValid) {
       rebalancePortfolio();
     }
   };
@@ -125,13 +125,30 @@ export function PortfolioGrid() {
           />
           <span>Hide zero balances</span>
         </label>
-      </div>
-  
-      {isRebalancing && !isTargetValid && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-400 rounded-md text-yellow-800">
-          Target percentages must sum to 100%. Current sum: {targetSum.toFixed(2)}%
+        
+        <div className="flex items-center space-x-2">
+          {lastPriceUpdate && (
+            <span className="text-xs text-gray-500">
+              Last updated: {lastPriceUpdate.toLocaleTimeString()}
+            </span>
+          )}
+          <button 
+            onClick={refreshPortfolio}
+            disabled={isPriceRefreshing}
+            className="p-1 rounded-full hover:bg-gray-100"
+            title="Refresh portfolio data"
+          >
+            <RefreshCw 
+              className={`w-4 h-4 ${isPriceRefreshing ? 'animate-spin text-blue-500' : 'text-gray-500'}`} 
+            />
+          </button>
         </div>
-      )}
+      </div>
+     {(hasTargets) && !isTargetValid && (
+      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-400 rounded-md text-yellow-800">
+        Target percentages must sum to 100%. Current sum: {targetSum.toFixed(2)}%
+      </div>
+    )}
   
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
@@ -180,10 +197,10 @@ export function PortfolioGrid() {
                       type="number"
                       value={asset.rebalancingTarget || ''}
                       onChange={(e) => handleTargetChange(asset.symbol, Number(e.target.value))}
-                      className="w-24 p-1 border rounded text-right bg-white text-gray-900 disabled:bg-gray-100"
+                      className="w-24 p-1 border rounded text-right bg-white text-gray-900"
                       min="0"
                       max="100"
-                      disabled={!isRebalancing}
+                      // Remove the disabled attribute so inputs are always enabled
                     />
                   </div>
                 </td>
@@ -209,40 +226,33 @@ export function PortfolioGrid() {
         </table>
       </div>
       
-      <div className="mt-4 flex gap-4">
-        <button
-          className={`px-4 py-2 rounded font-medium ${
+      <div className="mt-4 flex justify-end">
+        <div className="flex gap-4">
+        <button className={`px-4 py-2 rounded font-medium ${
             isExecutingSwaps
               ? 'bg-gray-400 cursor-not-allowed'
-              : isRebalancing
-              ? isTargetValid
-                ? 'bg-green-500 hover:bg-green-600 text-white'
-                : 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-500 hover:bg-blue-600 text-white'
+              : isTargetValid
+                ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                : hasTargets 
+                  ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
           }`}
           onClick={handleRebalanceClick}
-          disabled={isExecutingSwaps || (isRebalancing && !isTargetValid)}
+          disabled={isExecutingSwaps}
         >
           {isExecutingSwaps
             ? 'Executing Swaps...'
-            : isRebalancing
-            ? 'Execute Rebalance'
             : 'Rebalance Portfolio'}
         </button>
-        {isRebalancing && !isExecutingSwaps && (
-          <button
-            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium"
-            onClick={cancelRebalancing}
-          >
-            Cancel
-          </button>
-        )}
-        <button
-          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 font-medium"
-          onClick={() => {/* TODO: Implement buy */}}
-        >
-          Buy Asset
-        </button>
+          {isRebalancing && !isExecutingSwaps && (
+            <button
+              className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium"
+              onClick={cancelRebalancing}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-8">
         <TransactionHistory transactions={transactions} />
