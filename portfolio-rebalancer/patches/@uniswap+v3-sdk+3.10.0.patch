@@ -1,0 +1,36 @@
+diff --git a/node_modules/@uniswap/v3-sdk/dist/constants.d.ts b/node_modules/@uniswap/v3-sdk/dist/constants.d.ts
+index fb8323c..e791aeb 100644
+--- a/node_modules/@uniswap/v3-sdk/dist/constants.d.ts
++++ b/node_modules/@uniswap/v3-sdk/dist/constants.d.ts
+@@ -1,4 +1,4 @@
+-export declare const FACTORY_ADDRESS = "0x1F98431c8aD98523631AE4a59f267346ea31F984";
++export declare const FACTORY_ADDRESS = "0x12d21f5d0Ab768c312E19653Bf3f89917866B8e8";
+ export declare const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
+ export declare const POOL_INIT_CODE_HASH = "0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54";
+ /**
+diff --git a/node_modules/@uniswap/v3-sdk/dist/v3-sdk.cjs.development.js b/node_modules/@uniswap/v3-sdk/dist/v3-sdk.cjs.development.js
+index c3bdd79..19ab65e 100644
+--- a/node_modules/@uniswap/v3-sdk/dist/v3-sdk.cjs.development.js
++++ b/node_modules/@uniswap/v3-sdk/dist/v3-sdk.cjs.development.js
+@@ -902,7 +902,7 @@ try {
+ 
+ var _TICK_SPACINGS;
+ 
+-var FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984';
++var FACTORY_ADDRESS = '0x12d21f5d0Ab768c312E19653Bf3f89917866B8e8';
+ var ADDRESS_ZERO = '0x0000000000000000000000000000000000000000';
+ var POOL_INIT_CODE_HASH = '0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54';
+ 
+diff --git a/node_modules/@uniswap/v3-sdk/dist/v3-sdk.esm.js b/node_modules/@uniswap/v3-sdk/dist/v3-sdk.esm.js
+index 44552c6..908d87a 100644
+--- a/node_modules/@uniswap/v3-sdk/dist/v3-sdk.esm.js
++++ b/node_modules/@uniswap/v3-sdk/dist/v3-sdk.esm.js
+@@ -896,7 +896,7 @@ try {
+ 
+ var _TICK_SPACINGS;
+ 
+-var FACTORY_ADDRESS = '0x1F98431c8aD98523631AE4a59f267346ea31F984';
++var FACTORY_ADDRESS = '0x12d21f5d0Ab768c312E19653Bf3f89917866B8e8';
+ var ADDRESS_ZERO = '0x0000000000000000000000000000000000000000';
+ var POOL_INIT_CODE_HASH = '0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54';
+ /**

@@ -2,26 +2,15 @@
 import { useState, useEffect } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { type PublicClient, type WalletClient } from 'viem'
-import { buildPortfolioServiceClient, type AssetBalance } from '@/app/lib/web3/api'
-import { Transaction } from '../types/portfolio';
-import { TokenInfo } from '../lib/web3/types';
+import { buildPortfolioServiceClient } from '@/app/lib/web3/api'
+import { buildSwapService } from '@/app/lib/web3/services/swapService'
+// import { buildV2RouterSwapService } from '@/app/lib/web3/services/v2RouterSwapService'
+// import { buildSwapServiceClient } from '@/app/lib/web3/services/swapService'
+// import { Transaction } from '../types/portfolio';
+import { Asset, AssetBalance, SwapPair, TokenInfo, Transaction } from '../lib/web3/types';
 import { useTokensWithPrices } from './useTokensWithPrices';
 import { harmonyOne } from 'viem/chains';
-
-export interface Asset extends AssetBalance {
-  totalValue?: number;
-  portfolioPercentage?: number;
-  rebalancingTarget?: number;
-  chain: number;
-}
-
-interface SwapPair {
-  from: Asset;
-  to: Asset;
-  fromAmount: number;
-  toAmount: number;
-  usdValue: number;
-}
+// import { buildDirectHarmonySwapService } from '../lib/web3/services/directHarmonySwapService';
 
 const logPortfolioState = (assets: Asset[], title: string) => {
   console.group(title);
@@ -65,13 +54,12 @@ export function usePortfolio(): UsePortfolioReturn {
   const [pendingSwaps, setPendingSwaps] = useState<SwapPair[]>([]);
   const [lastPriceUpdate, setLastPriceUpdate] = useState<Date | null>(null);
 
-  const { 
+  const {
     tokens: supportedTokens,
     lastUpdated,
     isPriceRefreshing,
-    refreshPrices 
+    refreshPrices
   } = useTokensWithPrices(publicClient.chain?.id ?? harmonyOne.id);
-
 
   useEffect(() => {
     if (lastUpdated) {
@@ -79,24 +67,12 @@ export function usePortfolio(): UsePortfolioReturn {
     }
   }, [lastUpdated]);
 
-  // Enrich balances with price data and calculate percentages
   const refreshPortfolio = async () => {
-    // First refresh prices
     await refreshPrices();
-    
-    // Then re-fetch balances
-    // You might want to extract the balance fetching logic into a separate function
-    // and call it here
-    // fetchBalances();
   };
 
   const cancelRebalancing = () => {
     setIsRebalancing(false);
-    // Don't reset targets anymore - keep the user's inputs
-    // Remove or comment out this line:
-    // updateRebalancingTargets(
-    //   assets.reduce((acc, asset) => ({ ...acc, [asset.symbol]: 0 }), {})
-    // );
   };
 
   useEffect(() => {
@@ -106,38 +82,38 @@ export function usePortfolio(): UsePortfolioReturn {
         const tokenInfo = supportedTokens.find(t => t.symbol === balance.symbol);
         const amount = parseFloat(balance.formattedAmount);
         const totalValue = amount * (tokenInfo?.price ?? 0);
-        
+
         return {
           ...balance,
           totalValue,
           chain: tokenInfo?.chainId ?? 0
         };
       });
-    
+
       // Calculate total portfolio value
       const totalPortfolioValue = assetsWithValue.reduce(
-        (sum, asset) => sum + (asset.totalValue || 0), 
+        (sum, asset) => sum + (asset.totalValue || 0),
         0
       );
-    
+
       // Calculate percentages
       return assetsWithValue.map(asset => ({
         ...asset,
-        portfolioPercentage: totalPortfolioValue > 0 
-          ? ((asset.totalValue || 0) / totalPortfolioValue) * 100 
+        portfolioPercentage: totalPortfolioValue > 0
+          ? ((asset.totalValue || 0) / totalPortfolioValue) * 100
           : 0
       }));
     };
-      
+
     const fetchBalances = async () => {
       if (!isConnected || !address || supportedTokens.length === 0) return;
-      
+
       setIsLoading(true);
       try {
         setSupportedAssets(supportedTokens)
         const portfolioService = buildPortfolioServiceClient({
           supportedAssets: supportedTokens,
-          publicClient, 
+          publicClient,
           walletClient,
         });
         const balances = await portfolioService.getAllBalances(address);
@@ -150,13 +126,13 @@ export function usePortfolio(): UsePortfolioReturn {
         setIsLoading(false);
       }
     };
-  
+
     fetchBalances();
   }, [address, isConnected, publicClient, walletClient, supportedTokens]);
-  
+
 
   const updateRebalancingTargets = (targets: Record<string, number>) => {
-    setAssets(currentAssets => 
+    setAssets(currentAssets =>
       currentAssets.map(asset => ({
         ...asset,
         rebalancingTarget: targets[asset.symbol] || 0
@@ -164,11 +140,14 @@ export function usePortfolio(): UsePortfolioReturn {
     );
   };
 
-  const mockSwap = async (from: Asset, to: Asset, fromAmount: number, toAmount: number, usdValue: number): Promise<boolean> => {
+  const executeSwap = async (from: Asset, to: Asset, fromAmount: number, toAmount: number, usdValue: number): Promise<boolean> => {
+    if (!address || !isConnected || !walletClient) return false;
+
     console.group(`Executing Swap`);
     console.log(`From: ${fromAmount.toFixed(4)} ${from.symbol} (${usdValue.toFixed(2)})`);
     console.log(`To: ${toAmount.toFixed(4)} ${to.symbol} (${usdValue.toFixed(2)})`);
     console.groupEnd();
+
     const txId = Math.random().toString(36).substr(2, 9);
     const newTransaction: Transaction = {
       id: txId,
@@ -180,99 +159,180 @@ export function usePortfolio(): UsePortfolioReturn {
       usdValue,
       status: 'pending'
     };
+
     setTransactions(prev => [newTransaction, ...prev]);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Update transaction status to completed
-      setTransactions(prev => 
-        prev.map(tx => 
-          tx.id === txId 
-            ? { ...tx, status: 'completed' }
+
+    try {
+      // Use the swap service to execute the swap
+      const swapService = buildSwapService({
+        publicClient,
+        walletClient,
+        supportedTokens: supportedAssets
+      });
+
+      const swapPair: SwapPair = {
+        from,
+        to,
+        fromAmount,
+        toAmount,
+        usdValue
+      };
+
+      const result = await swapService.executeSwap(swapPair, address);
+
+      if (result.success) {
+        // Update transaction status to completed
+        setTransactions(prev =>
+          prev.map(tx =>
+            tx.id === txId
+              ? { ...tx, status: 'completed', txHash: result.txHash }
+              : tx
+          )
+        );
+        return true;
+      } else {
+        // Update transaction status to failed
+        setTransactions(prev =>
+          prev.map(tx =>
+            tx.id === txId
+              ? { ...tx, status: 'failed', error: result.error }
+              : tx
+          )
+        );
+        return false;
+      }
+    } catch (err) {
+      // Update transaction status to failed
+      setTransactions(prev =>
+        prev.map(tx =>
+          tx.id === txId
+            ? {
+              ...tx,
+              status: 'failed',
+              error: err instanceof Error ? err.message : 'Unknown error'
+            }
             : tx
         )
       );
-      
-    return true;
+      return false;
+    }
   };
 
+  // Inside your calculateSwaps function in usePortfolio.ts
+  // Inside your calculateSwaps function in usePortfolio.ts
   const calculateSwaps = (currentAssets: Asset[]): SwapPair[] => {
     console.group('Starting Rebalance Calculation');
     logPortfolioState(currentAssets, 'Initial Portfolio Distribution');
+    
+    // Calculate total portfolio value
     const portfolioTotalValue = currentAssets.reduce(
       (sum, asset) => sum + (asset.totalValue || 0),
       0
     );
   
-
-    // Calculate required changes for each asset
-    const changes = currentAssets.map(asset => ({
-      asset,
-      currentPercentage: asset.portfolioPercentage || 0,
-      targetPercentage: asset.rebalancingTarget || 0,
-      difference: ((asset.portfolioPercentage || 0) - (asset.rebalancingTarget || 0)),
-      usdValue: (asset.totalValue || 0)
-    }));
-
-    // Separate sellers and buyers
-    const sellers = changes
-      .filter(change => change.difference > 0)
-      .sort((a, b) => b.difference - a.difference);
-    
-    const buyers = changes
-      .filter(change => change.difference < 0)
-      .sort((a, b) => a.difference - b.difference);
-
+    // Initialize arrays for assets that need adjustment
     const swaps: SwapPair[] = [];
-
-    // Match sellers with buyers
-    sellers.forEach(seller => {
-    let remainingUsdToSell = (seller.difference / 100) * portfolioTotalValue;
     
-    buyers.forEach(buyer => {
-      if (remainingUsdToSell <= 0) return;
+    // For each asset, calculate the target value based on target percentage
+    currentAssets.forEach(asset => {
+      const currentValue = asset.totalValue || 0;
+      const currentPercentage = asset.portfolioPercentage || 0;
+      const targetPercentage = asset.rebalancingTarget || 0;
       
-      const buyerNeedsUsd = (-buyer.difference / 100) * portfolioTotalValue;
-        const swapUsdAmount = Math.min(remainingUsdToSell, buyerNeedsUsd);
-
-        if (swapUsdAmount > 0) {
-          // Calculate token amounts based on prices
-          const fromAmount = swapUsdAmount / (seller.asset.totalValue || 0) * 
-                           parseFloat(seller.asset.formattedAmount);
-          const toAmount = swapUsdAmount / (buyer.asset.totalValue || 0) * 
-                         parseFloat(buyer.asset.formattedAmount);
-
-          swaps.push({
-            from: seller.asset,
-            to: buyer.asset,
-            fromAmount,
-            toAmount,
-            usdValue: swapUsdAmount
-          });
-
-          remainingUsdToSell -= swapUsdAmount;
-        }
+      // Skip assets with no target
+      if (targetPercentage === 0) return;
+      
+      // Calculate target value
+      const targetValue = (targetPercentage / 100) * portfolioTotalValue;
+      
+      // Calculate value difference (negative means we need to buy, positive means we need to sell)
+      const valueDifference = currentValue - targetValue;
+      
+      console.log(`${asset.symbol}: Current ${currentPercentage.toFixed(2)}% ($${currentValue.toFixed(2)}), Target ${targetPercentage}% ($${targetValue.toFixed(2)}), Diff: $${valueDifference.toFixed(2)}`);
+      
+      // Store info about this asset
+      asset.tempInfo = {
+        targetValue,
+        valueDifference
+      };
+    });
+    
+    // Find sellers (assets with positive value difference)
+    const sellers = currentAssets
+      .filter(asset => asset.tempInfo?.valueDifference && asset.tempInfo?.valueDifference > 0)
+      .sort((a, b) => (b.tempInfo?.valueDifference || 0) - (a.tempInfo?.valueDifference || 0));
+    
+    // Find buyers (assets with negative value difference)
+    const buyers = currentAssets
+      .filter(asset => asset.tempInfo?.valueDifference && asset.tempInfo?.valueDifference < 0)
+      .sort((a, b) => (a.tempInfo?.valueDifference || 0) - (b.tempInfo?.valueDifference || 0));
+    
+    console.log(`Found ${sellers.length} sellers and ${buyers.length} buyers`);
+    
+    // Create pairs for swapping
+    sellers.forEach(seller => {
+      let remainingValueToSell = seller.tempInfo?.valueDifference || 0;
+      const sellerPrice = (seller.totalValue || 0) / parseFloat(seller.formattedAmount || '1');
+      
+      buyers.forEach(buyer => {
+        if (remainingValueToSell <= 0) return;
+        
+        const valueToBuy = Math.abs(buyer.tempInfo?.valueDifference || 0);
+        const swapValue = Math.min(remainingValueToSell, valueToBuy);
+        
+        if (swapValue < 0.01) return; // Skip very small swaps
+        
+        const buyerPrice = (buyer.totalValue || 0) / parseFloat(buyer.formattedAmount || '1');
+        
+        // Calculate token amounts
+        const fromAmount = sellerPrice > 0 ? swapValue / sellerPrice : 0;
+        const toAmount = buyerPrice > 0 ? swapValue / buyerPrice : 0;
+        
+        console.log(`Creating swap: ${fromAmount.toFixed(6)} ${seller.symbol} → ${toAmount.toFixed(6)} ${buyer.symbol} ($${swapValue.toFixed(2)})`);
+        
+        swaps.push({
+          from: seller,
+          to: buyer,
+          fromAmount,
+          toAmount,
+          usdValue: swapValue
+        });
+        
+        remainingValueToSell -= swapValue;
+        buyer.tempInfo = {
+          ...buyer.tempInfo!,
+          valueDifference: (buyer.tempInfo?.valueDifference || 0) + swapValue
+        };
       });
     });
-  
+    
+    console.groupEnd();
     return swaps;
   };
 
   const rebalancePortfolio = async () => {
     if (!isConnected) return;
-  
+
     try {
       setIsExecutingSwaps(true);
       let simulatedAssets = [...assets];
       const swaps = calculateSwaps(simulatedAssets);
       setPendingSwaps(swaps);
-  
+
       // Execute swaps sequentially
       for (const swap of swaps) {
-        const success = await mockSwap(swap.from, swap.to, swap.fromAmount, swap.toAmount, swap.usdValue);
+        const success = await executeSwap(
+          swap.from,
+          swap.to,
+          swap.fromAmount,
+          swap.toAmount ?? 0,
+          swap.usdValue
+        );
+
         if (!success) {
           throw new Error(`Failed to swap ${swap.from.symbol} to ${swap.to.symbol}`);
         }
-  
+
         // Update simulated balances after each swap
         simulatedAssets = simulatedAssets.map(asset => {
           if (asset.symbol === swap.from.symbol) {
@@ -284,10 +344,7 @@ export function usePortfolio(): UsePortfolioReturn {
             };
           }
           if (asset.symbol === swap.to.symbol) {
-            const newAmount = asset.symbol === 'USDT' ? 
-              (parseFloat(asset.formattedAmount) + swap.usdValue) : 
-              (parseFloat(asset.formattedAmount) + swap.toAmount);
-            
+            const newAmount = parseFloat(asset.formattedAmount) + (swap.toAmount ?? 0);
             return {
               ...asset,
               formattedAmount: newAmount.toString(),
@@ -297,22 +354,21 @@ export function usePortfolio(): UsePortfolioReturn {
           return asset;
         });
       }
-  
+
       // Recalculate percentages including zero balances
-      // This is likely where the error is happening
       const portfolioTotalValue = simulatedAssets.reduce(
-        (sum, asset) => sum + (asset.totalValue || 0), 
+        (sum, asset) => sum + (asset.totalValue || 0),
         0
       );
-      
+
       // Reset rebalancing targets and update percentages
       simulatedAssets = simulatedAssets.map(asset => ({
         ...asset,
-        portfolioPercentage: portfolioTotalValue > 0 ? 
+        portfolioPercentage: portfolioTotalValue > 0 ?
           ((asset.totalValue || 0) / portfolioTotalValue) * 100 : 0,
         rebalancingTarget: 0 // Reset target to 0
       }));
-  
+
       console.log('Final distribution:', simulatedAssets);
       setAssets(simulatedAssets);
       setPendingSwaps([]);
@@ -323,11 +379,10 @@ export function usePortfolio(): UsePortfolioReturn {
       setIsExecutingSwaps(false);
     }
   };
-  
+
   const startRebalancing = () => {
     setIsRebalancing(true);
   };
-
 
   return {
     assets,

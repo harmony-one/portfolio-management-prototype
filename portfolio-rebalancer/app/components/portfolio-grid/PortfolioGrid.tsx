@@ -3,9 +3,9 @@ import { useAccount } from 'wagmi';
 import { usePortfolio } from '../../hooks/usePortfolio';
 import { formatTokenAmount, formatCurrency, formatPercentage } from '@/app/lib/utils/numberUtils';
 import { useState, useEffect, useMemo } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { TransactionHistory } from './TransactionHistory';
-import { RefreshCw } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 type SortDirection = 'asc' | 'desc';
 
@@ -28,6 +28,19 @@ export function PortfolioGrid() {
     isPriceRefreshing, 
     refreshPortfolio    
   } = usePortfolio();
+
+  useEffect(() => {
+    if (error) {
+      toast.error(error.message, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    }
+  }, [error]);
 
   const portfolioStats = useMemo(() => {
     // Step 1: Filter for non-zero assets and calculate total portfolio value first
@@ -110,8 +123,6 @@ export function PortfolioGrid() {
   if (!mounted) return <div className="animate-pulse">...</div>;
   if (!isConnected) return <div>Connect Your Wallet</div>;
   if (isLoading) return <div>Loading portfolio data...</div>;
-  if (error) return <div className="text-red-500">Error: {error.message}</div>;
-
 
   return (
     <div className="container mx-auto p-4">
@@ -144,11 +155,12 @@ export function PortfolioGrid() {
           </button>
         </div>
       </div>
-     {(hasTargets) && !isTargetValid && (
-      <div className="mb-4 p-4 bg-yellow-50 border border-yellow-400 rounded-md text-yellow-800">
-        Target percentages must sum to 100%. Current sum: {targetSum.toFixed(2)}%
-      </div>
-    )}
+      
+      {(hasTargets) && !isTargetValid && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-400 rounded-md text-yellow-800">
+          Target percentages must sum to 100%. Current sum: {targetSum.toFixed(2)}%
+        </div>
+      )}
   
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
@@ -200,7 +212,6 @@ export function PortfolioGrid() {
                       className="w-24 p-1 border rounded text-right bg-white text-gray-900"
                       min="0"
                       max="100"
-                      // Remove the disabled attribute so inputs are always enabled
                     />
                   </div>
                 </td>
@@ -226,24 +237,24 @@ export function PortfolioGrid() {
         </table>
       </div>
       
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end gap-2">
         <div className="flex gap-4">
-        <button className={`px-4 py-2 rounded font-medium ${
-            isExecutingSwaps
-              ? 'bg-gray-400 cursor-not-allowed'
-              : isTargetValid
-                ? 'bg-blue-500 hover:bg-blue-600 text-white'
-                : hasTargets 
-                  ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
-          }`}
-          onClick={handleRebalanceClick}
-          disabled={isExecutingSwaps}
-        >
-          {isExecutingSwaps
-            ? 'Executing Swaps...'
-            : 'Rebalance Portfolio'}
-        </button>
+          <button className={`px-4 py-2 rounded font-medium ${
+              isExecutingSwaps
+                ? 'bg-gray-400 cursor-not-allowed'
+                : isTargetValid
+                  ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                  : hasTargets 
+                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
+            onClick={handleRebalanceClick}
+            disabled={isExecutingSwaps}
+          >
+            {isExecutingSwaps
+              ? 'Executing Swaps...'
+              : 'Rebalance Portfolio'}
+          </button>
           {isRebalancing && !isExecutingSwaps && (
             <button
               className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 font-medium"
@@ -254,6 +265,7 @@ export function PortfolioGrid() {
           )}
         </div>
       </div>
+      
       <div className="mt-8">
         <TransactionHistory transactions={transactions} />
       </div>

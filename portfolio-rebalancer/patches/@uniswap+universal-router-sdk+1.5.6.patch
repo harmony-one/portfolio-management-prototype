@@ -1,0 +1,52 @@
+diff --git a/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.cjs.development.js b/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.cjs.development.js
+index d0e1f6e..7b2e1b6 100644
+--- a/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.cjs.development.js
++++ b/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.cjs.development.js
+@@ -246,6 +246,10 @@ var CHAIN_CONFIGS = (_CHAIN_CONFIGS = {}, _CHAIN_CONFIGS[1] = {
+   router: '0x198EF79F1F515F02dFE9e3115eD9fC07183f02fC',
+   weth: '0x4200000000000000000000000000000000000006',
+   creationBlock: 1452376
++}, _CHAIN_CONFIGS[1666600000] = {
++	router: '0xdAa5Bf7004e33789ce13A2bBE620953B55608B8b',
++	weth: '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a',
++	creationBlock: 44553596
+ }, _CHAIN_CONFIGS);
+ var UNIVERSAL_ROUTER_ADDRESS = function UNIVERSAL_ROUTER_ADDRESS(chainId) {
+   if (!(chainId in CHAIN_CONFIGS)) throw new Error("Universal Router not deployed on chain " + chainId);
+diff --git a/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.esm.js b/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.esm.js
+index a85bcc6..d560482 100644
+--- a/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.esm.js
++++ b/node_modules/@uniswap/universal-router-sdk/dist/universal-router-sdk.esm.js
+@@ -243,6 +243,10 @@ var CHAIN_CONFIGS = (_CHAIN_CONFIGS = {}, _CHAIN_CONFIGS[1] = {
+   router: '0x198EF79F1F515F02dFE9e3115eD9fC07183f02fC',
+   weth: '0x4200000000000000000000000000000000000006',
+   creationBlock: 1452376
++}, _CHAIN_CONFIGS[1666600000] = {
++	router: '0xdAa5Bf7004e33789ce13A2bBE620953B55608B8b',
++	weth: '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a',
++	creationBlock: 44553596
+ }, _CHAIN_CONFIGS);
+ var UNIVERSAL_ROUTER_ADDRESS = function UNIVERSAL_ROUTER_ADDRESS(chainId) {
+   if (!(chainId in CHAIN_CONFIGS)) throw new Error("Universal Router not deployed on chain " + chainId);
+@@ -257,7 +261,7 @@ var WETH_ADDRESS = function WETH_ADDRESS(chainId) {
+   if (CHAIN_CONFIGS[chainId].weth == WETH_NOT_SUPPORTED_ON_CHAIN) throw new Error("Chain " + chainId + " does not have WETH");
+   return CHAIN_CONFIGS[chainId].weth;
+ };
+-var PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
++var PERMIT2_ADDRESS = '0x00000000BD0047637ac6BA3af44b52005ceD9557';
+ var CONTRACT_BALANCE = /*#__PURE__*/BigNumber.from(2).pow(255);
+ var ETH_ADDRESS = '0x0000000000000000000000000000000000000000';
+ var ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+diff --git a/node_modules/@uniswap/universal-router-sdk/dist/utils/constants.d.ts b/node_modules/@uniswap/universal-router-sdk/dist/utils/constants.d.ts
+index def3e07..680474f 100644
+--- a/node_modules/@uniswap/universal-router-sdk/dist/utils/constants.d.ts
++++ b/node_modules/@uniswap/universal-router-sdk/dist/utils/constants.d.ts
+@@ -2,7 +2,7 @@ import { BigNumber } from 'ethers';
+ export declare const UNIVERSAL_ROUTER_ADDRESS: (chainId: number) => string;
+ export declare const UNIVERSAL_ROUTER_CREATION_BLOCK: (chainId: number) => number;
+ export declare const WETH_ADDRESS: (chainId: number) => string;
+-export declare const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
++export declare const PERMIT2_ADDRESS = "0x00000000BD0047637ac6BA3af44b52005ceD9557";
+ export declare const CONTRACT_BALANCE: BigNumber;
+ export declare const ETH_ADDRESS = "0x0000000000000000000000000000000000000000";
+ export declare const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
