@@ -1,11 +1,9 @@
 // lib/web3/hardcoded-tokens.ts
 import { ChainId, Currency, NativeCurrency, Token } from '@uniswap/sdk-core';
 
-// Define Harmony Chain ID
 export const HARMONY_CHAIN_ID = 1666600000;
 export const HARMONY_CHAIN_ID_UNISWAP = ChainId.HARMONY;
 
-// Function to check if a chainId is Harmony
 export function isHarmony(chainId: number) {
   return chainId === HARMONY_CHAIN_ID;
 }
@@ -19,7 +17,6 @@ export const WrappedNativeToken = new Token(
   'Wrapped ONE'
 );
 
-// Define Harmony Native Currency
 export class HarmonyNativeCurrency extends NativeCurrency {
   equals(other: Currency): boolean {
     return other.isNative && other.chainId === this.chainId;

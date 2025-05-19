@@ -18,7 +18,7 @@ export function TestRouterSwapButton({ walletAddress }: { walletAddress: string 
     {
       chainId: harmonyOne.id,
       symbol: 'ONE',
-      name: 'Harmony ONE',
+      name: 'ONE',
       address: 'native', // Native token address
       decimals: 18,
       isNative: true,

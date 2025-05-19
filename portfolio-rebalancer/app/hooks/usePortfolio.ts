@@ -1,3 +1,4 @@
+'use client';
 // hooks/usePortfolio.ts
 import { useState, useEffect } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';

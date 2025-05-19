@@ -1,3 +1,5 @@
+'use client'
+
 // hooks/useTokensWithPrices.ts
 import { useState, useEffect, useRef } from 'react';
 import { TokenListService } from '@/app/lib/web3/tokens';
