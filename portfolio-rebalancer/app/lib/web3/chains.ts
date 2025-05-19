@@ -2,6 +2,8 @@ import { harmonyOne, type Chain } from 'viem/chains';
 
 export type ChainId = 'mainnet' | 'testnet';
 
+console.log('FCOOOO:::::::: :: :: : : ::: : ::::', harmonyOne)
+
 const harmonyTestnet: Chain = {
   id: 1666700000,
   name: 'Harmony Testnet',

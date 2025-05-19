@@ -1,20 +1,10 @@
 // lib/web3/portfolioService.ts
 import { Address, erc20Abi, formatUnits } from 'viem';
 import { type PublicClient, type WalletClient } from 'viem'
-import { TokenInfo } from './types';
+import { AssetBalance, TokenInfo } from './types';
 import { TokenWithPrice } from '@/app/hooks/useTokensWithPrices';
 
 // Configuration for supported assets
-
-
-export interface AssetBalance {
-  symbol: string;
-  amount: string;
-  formattedAmount: string;
-  address: string;
-  chain: number;
-}
-
 interface PortfolioServiceClient {
   getAllBalances: (address: Address) => Promise<AssetBalance[]>;
   approveToken: (
@@ -52,7 +42,7 @@ export const buildPortfolioServiceClient = ({
     try {
       let balance: bigint;
 
-      if (asset.address === '0x0000000000000000000000000000000000000000') {
+      if (asset.isNative) {
         // Native ONE token
         balance = await publicClient.getBalance({
           address: address,

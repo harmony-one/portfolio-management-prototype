@@ -1,3 +1,5 @@
+'use client'
+
 // hooks/useTokensWithPrices.ts
 import { useState, useEffect, useRef } from 'react';
 import { TokenListService } from '@/app/lib/web3/tokens';
@@ -6,7 +8,7 @@ import useSWR from 'swr';
 
 export interface TokenWithPrice extends TokenInfo {
   price: number;
-  priceTimestamp: number;
+  priceTimestamp?: number;
 }
 
 interface UseTokensWithPricesReturn {
@@ -17,7 +19,7 @@ interface UseTokensWithPricesReturn {
   getTokenByAddress: (address: string) => TokenWithPrice | undefined;
   refreshPrices: () => Promise<void>;
   formatUSD: (value: number) => string;
-  lastUpdated: Date | null; // Add this to show users when data was last updated
+  lastUpdated: Date | null; // Show users when data was last updated
   isPriceRefreshing: boolean; // Show when a price refresh is happening
 }
 
@@ -75,14 +77,13 @@ export function useTokensWithPrices(chainId: number): UseTokensWithPricesReturn 
     setIsPriceRefreshing(isValidating);
   }, [isValidating]);
 
-  // Map token symbols to CoinGecko IDs - this could be expanded
+  // Map token symbols to CoinGecko IDs
   const tokenIdMapping: Record<string, string> = {
     'ONE': 'harmony',
     'USDT': 'tether',
     'BTC': 'bitcoin',
     '1USDT': 'tether',
     '1WBTC': 'bitcoin'
-    // Add more mappings as needed
   };
 
   const fetchTokens = async (): Promise<TokenInfo[]> => {

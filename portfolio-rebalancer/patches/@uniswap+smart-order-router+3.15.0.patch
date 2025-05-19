@@ -1,0 +1,961 @@
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/providers/caching-token-provider.js b/node_modules/@uniswap/smart-order-router/build/main/providers/caching-token-provider.js
+index 83c125e..a2cb3b5 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/providers/caching-token-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/providers/caching-token-provider.js
+@@ -92,6 +92,16 @@ exports.CACHE_SEED_TOKENS = {
+     [sdk_core_1.ChainId.BASE]: {
+         USDC: token_provider_1.USDC_BASE,
+         WETH: util_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.BASE],
++    },
++    [sdk_core_1.ChainId.HARMONY]: {
++        USDC: token_provider_1.USDC_HARMONY,
++        USDT: token_provider_1.USDT_HARMONY,
++        WBTC: token_provider_1.WBTC_HARMONY,
++        ETH: token_provider_1.ETH_HARMONY,
++        WONE: util_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.HARMONY],
++        ARB_USDC_HARMONY: token_provider_1.ARB_USDC_HARMONY,
++        ARB_USDT_HARMONY: token_provider_1.ARB_USDT_HARMONY,
++        ARB_DAI_HARMONY: token_provider_1.ARB_DAI_HARMONY,
+     }
+     // Currently we do not have providers for Moonbeam mainnet or Gnosis testnet
+ };
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.d.ts b/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.d.ts
+index ee243bc..4b89541 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.d.ts
+@@ -86,6 +86,13 @@ export declare const USDC_MOONBEAM: Token;
+ export declare const WGLMR_MOONBEAM: Token;
+ export declare const DAI_MOONBEAM: Token;
+ export declare const WBTC_MOONBEAM: Token;
++export declare const WBTC_HARMONY: Token;
++export declare const ETH_HARMONY: Token;
++export declare const USDT_HARMONY: Token;
++export declare const USDC_HARMONY: Token;
++export declare const ARB_USDC_HARMONY: Token;
++export declare const ARB_USDT_HARMONY: Token;
++export declare const ARB_DAI_HARMONY: Token;
+ export declare class TokenProvider implements ITokenProvider {
+     private chainId;
+     protected multicall2Provider: IMulticallProvider;
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.js b/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.js
+index 80da1f0..dd99160 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/providers/token-provider.js
+@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
+ };
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.CELO_ALFAJORES = exports.CEUR_CELO = exports.CUSD_CELO = exports.DAI_CELO = exports.CELO = exports.USDT_BNB = exports.USDC_BNB = exports.ETH_BNB = exports.DAI_BNB = exports.BUSD_BNB = exports.BTC_BNB = exports.WETH_POLYGON_MUMBAI = exports.DAI_POLYGON_MUMBAI = exports.USDC_POLYGON_MUMBAI = exports.WMATIC_POLYGON_MUMBAI = exports.DAI_POLYGON = exports.USDC_POLYGON = exports.WETH_POLYGON = exports.WMATIC_POLYGON = exports.USDC_ARBITRUM_GOERLI = exports.DAI_ARBITRUM_GOERLI = exports.ARB_ARBITRUM = exports.DAI_ARBITRUM = exports.WBTC_ARBITRUM = exports.USDT_ARBITRUM = exports.USDC_ARBITRUM = exports.DAI_OPTIMISM_GOERLI = exports.WBTC_OPTIMISM_GOERLI = exports.USDT_OPTIMISM_GOERLI = exports.USDC_OPTIMISM_GOERLI = exports.OP_OPTIMISM = exports.DAI_OPTIMISM = exports.WBTC_OPTIMISM = exports.USDT_OPTIMISM = exports.USDC_OPTIMISM = exports.UNI_GOERLI = exports.DAI_GOERLI = exports.WBTC_GOERLI = exports.USDT_GOERLI = exports.USDC_GOERLI = exports.DAI_SEPOLIA = exports.USDC_SEPOLIA = exports.LIDO_MAINNET = exports.AAVE_MAINNET = exports.UNI_MAINNET = exports.FEI_MAINNET = exports.DAI_MAINNET = exports.WBTC_MAINNET = exports.USDT_MAINNET = exports.USDC_MAINNET = void 0;
+-exports.WNATIVE_ON = exports.USDC_ON = exports.USDT_ON = exports.DAI_ON = exports.TokenProvider = exports.WBTC_MOONBEAM = exports.DAI_MOONBEAM = exports.WGLMR_MOONBEAM = exports.USDC_MOONBEAM = exports.WBTC_GNOSIS = exports.WXDAI_GNOSIS = exports.USDC_ETHEREUM_GNOSIS = exports.USDC_BASE_GOERLI = exports.USDC_BASE = exports.USDC_AVAX = exports.DAI_AVAX = exports.CEUR_CELO_ALFAJORES = exports.CUSD_CELO_ALFAJORES = exports.DAI_CELO_ALFAJORES = void 0;
++exports.WNATIVE_ON = exports.USDC_ON = exports.USDT_ON = exports.DAI_ON = exports.TokenProvider = exports.ARB_DAI_HARMONY = exports.ARB_USDT_HARMONY = exports.ARB_USDC_HARMONY = exports.USDC_HARMONY = exports.USDT_HARMONY = exports.ETH_HARMONY = exports.WBTC_HARMONY = exports.WBTC_MOONBEAM = exports.DAI_MOONBEAM = exports.WGLMR_MOONBEAM = exports.USDC_MOONBEAM = exports.WBTC_GNOSIS = exports.WXDAI_GNOSIS = exports.USDC_ETHEREUM_GNOSIS = exports.USDC_BASE_GOERLI = exports.USDC_BASE = exports.USDC_AVAX = exports.DAI_AVAX = exports.CEUR_CELO_ALFAJORES = exports.CUSD_CELO_ALFAJORES = exports.DAI_CELO_ALFAJORES = void 0;
+ const abi_1 = require("@ethersproject/abi");
+ const strings_1 = require("@ethersproject/strings");
+ const sdk_core_1 = require("@uniswap/sdk-core");
+@@ -88,6 +88,13 @@ exports.USDC_MOONBEAM = new sdk_core_1.Token(sdk_core_1.ChainId.MOONBEAM, '0x818
+ exports.WGLMR_MOONBEAM = new sdk_core_1.Token(sdk_core_1.ChainId.MOONBEAM, '0xAcc15dC74880C9944775448304B263D191c6077F', 18, 'WGLMR', 'Wrapped GLMR');
+ exports.DAI_MOONBEAM = new sdk_core_1.Token(sdk_core_1.ChainId.MOONBEAM, '0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b', 6, 'DAI', 'Dai on moonbeam bridged using Multichain');
+ exports.WBTC_MOONBEAM = new sdk_core_1.Token(sdk_core_1.ChainId.MOONBEAM, '0x922D641a426DcFFaeF11680e5358F34d97d112E1', 8, 'WBTC', 'Wrapped BTC bridged using Multichain');
++exports.WBTC_HARMONY = new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0x118f50d23810c5E09Ebffb42d7D3328dbF75C2c2', 8, '1WBTC', 'Wrapped BTC');
++exports.ETH_HARMONY = new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0x4cC435d7b9557d54d6EF02d69Bbf72634905Bf11', 18, '1ETH', 'ETH');
++exports.USDT_HARMONY = new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0xF2732e8048f1a411C63e2df51d08f4f52E598005', 6, '1USDT', 'Tether USD');
++exports.USDC_HARMONY = new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0xBC594CABd205bD993e7FfA6F3e9ceA75c1110da5', 6, '1USDC', 'USD Coin');
++exports.ARB_USDC_HARMONY = new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0x9b5fae311A4A4b9d838f301C9c27b55d19BAa4Fb', 6, 'arbUSDC', 'USD Coin (Arb1)');
++exports.ARB_USDT_HARMONY = new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0x2DA729BA5231d2C79290aBA4a8b85a5c94dA4724', 6, 'arbUSDT', 'Tether USD');
++exports.ARB_DAI_HARMONY = new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0x7C07d01C9DaB5aBB09CE2b42242a7570F25fC2CC', 18, 'arbDAI', 'Dai Stablecoin');
+ class TokenProvider {
+     constructor(chainId, multicall2Provider) {
+         this.chainId = chainId;
+@@ -227,6 +234,8 @@ const DAI_ON = (chainId) => {
+             return exports.DAI_BNB;
+         case sdk_core_1.ChainId.AVALANCHE:
+             return exports.DAI_AVAX;
++        case sdk_core_1.ChainId.HARMONY:
++            return exports.ARB_DAI_HARMONY;    
+         default:
+             throw new Error(`Chain id: ${chainId} not supported`);
+     }
+@@ -246,6 +255,8 @@ const USDT_ON = (chainId) => {
+             return exports.USDT_ARBITRUM;
+         case sdk_core_1.ChainId.BNB:
+             return exports.USDT_BNB;
++        case sdk_core_1.ChainId.HARMONY:
++            return exports.USDT_HARMONY;
+         default:
+             throw new Error(`Chain id: ${chainId} not supported`);
+     }
+@@ -283,6 +294,9 @@ const USDC_ON = (chainId) => {
+             return exports.USDC_BASE;
+         case sdk_core_1.ChainId.BASE_GOERLI:
+             return exports.USDC_BASE_GOERLI;
++        case sdk_core_1.ChainId.HARMONY:
++            return exports.USDC_HARMONY;
++            
+         default:
+             throw new Error(`Chain id: ${chainId} not supported`);
+     }
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/providers/v2/static-subgraph-provider.js b/node_modules/@uniswap/smart-order-router/build/main/providers/v2/static-subgraph-provider.js
+index b2b52f3..6137819 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/providers/v2/static-subgraph-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/providers/v2/static-subgraph-provider.js
+@@ -20,7 +20,7 @@ const BASES_TO_CHECK_TRADES_AGAINST = {
+     ],
+     [sdk_core_1.ChainId.GOERLI]: [chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.GOERLI]],
+     [sdk_core_1.ChainId.SEPOLIA]: [chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.SEPOLIA]],
+-    //v2 not deployed on [optimism, arbitrum, polygon, celo, gnosis, moonbeam, bnb, avalanche] and their testnets
++    //v2 not deployed on [optimism, arbitrum, polygon, celo, gnosis, moonbeam, harmony, bnb, avalanche] and their testnets
+     [sdk_core_1.ChainId.OPTIMISM]: [],
+     [sdk_core_1.ChainId.ARBITRUM_ONE]: [],
+     [sdk_core_1.ChainId.ARBITRUM_GOERLI]: [],
+@@ -34,7 +34,8 @@ const BASES_TO_CHECK_TRADES_AGAINST = {
+     [sdk_core_1.ChainId.BNB]: [],
+     [sdk_core_1.ChainId.AVALANCHE]: [],
+     [sdk_core_1.ChainId.BASE_GOERLI]: [],
+-    [sdk_core_1.ChainId.BASE]: []
++    [sdk_core_1.ChainId.BASE]: [],
++    [sdk_core_1.ChainId.HARMONY]: [],
+ };
+ /**
+  * Provider that does not get data from an external source and instead returns
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/providers/v3/static-subgraph-provider.js b/node_modules/@uniswap/smart-order-router/build/main/providers/v3/static-subgraph-provider.js
+index 4e71f87..caba0ba 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/providers/v3/static-subgraph-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/providers/v3/static-subgraph-provider.js
+@@ -97,6 +97,16 @@ const BASES_TO_CHECK_TRADES_AGAINST = {
+     ],
+     [sdk_core_1.ChainId.BASE_GOERLI]: [chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.BASE_GOERLI]],
+     [sdk_core_1.ChainId.BASE]: [chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.BASE], token_provider_1.USDC_BASE],
++    [sdk_core_1.ChainId.HARMONY]: [
++        chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.HARMONY],
++        token_provider_1.ETH_HARMONY,
++        token_provider_1.WBTC_HARMONY,
++        token_provider_1.USDT_HARMONY,
++        token_provider_1.USDC_HARMONY,
++        token_provider_1.ARB_USDC_HARMONY,
++        token_provider_1.ARB_USDT_HARMONY,
++        token_provider_1.ARB_DAI_HARMONY,
++    ]
+ };
+ /**
+  * Provider that uses a hardcoded list of V3 pools to generate a list of subgraph pools.
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/providers/v3/subgraph-provider.js b/node_modules/@uniswap/smart-order-router/build/main/providers/v3/subgraph-provider.js
+index bc019f6..de5e06e 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/providers/v3/subgraph-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/providers/v3/subgraph-provider.js
+@@ -35,6 +35,7 @@ const SUBGRAPH_URL_BY_CHAIN = {
+     [sdk_core_1.ChainId.BNB]: 'https://api.thegraph.com/subgraphs/name/ilyamk/uniswap-v3---bnb-chain',
+     [sdk_core_1.ChainId.AVALANCHE]: 'https://api.thegraph.com/subgraphs/name/lynnshaoyu/uniswap-v3-avax',
+     [sdk_core_1.ChainId.BASE]: 'https://api.studio.thegraph.com/query/48211/uniswap-v3-base/v0.0.1',
++    [sdk_core_1.ChainId.HARMONY]: 'https://api.thegraph.com/subgraphs/name/nick8319/uniswap-v3-harmony',
+ };
+ const PAGE_SIZE = 1000; // 1k is max possible query size from subgraph.
+ class V3SubgraphProvider {
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/alpha-router.js b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/alpha-router.js
+index 5517475..205d34f 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/alpha-router.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/alpha-router.js
+@@ -106,6 +106,7 @@ class AlphaRouter {
+                     break;
+                 case sdk_core_1.ChainId.CELO:
+                 case sdk_core_1.ChainId.CELO_ALFAJORES:
++                case sdk_core_1.ChainId.HARMONY:
+                     this.onChainQuoteProvider = new providers_2.OnChainQuoteProvider(chainId, provider, this.multicall2Provider, {
+                         retries: 2,
+                         minTimeout: 100,
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/config.js b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/config.js
+index 28d7a06..6c31751 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/config.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/config.js
+@@ -39,6 +39,7 @@ const DEFAULT_ROUTING_CONFIG_BY_CHAIN = (chainId) => {
+         case sdk_core_1.ChainId.ARBITRUM_GOERLI:
+         case sdk_core_1.ChainId.CELO:
+         case sdk_core_1.ChainId.CELO_ALFAJORES:
++        case sdk_core_1.ChainId.HARMONY:    
+             return {
+                 v2PoolSelection: {
+                     topN: 3,
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/functions/get-candidate-pools.js b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/functions/get-candidate-pools.js
+index 3bace7d..61fd701 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/functions/get-candidate-pools.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/functions/get-candidate-pools.js
+@@ -72,6 +72,11 @@ const baseTokensByChain = {
+     [sdk_core_1.ChainId.BASE]: [
+         token_provider_1.USDC_BASE,
+     ],
++    [sdk_core_1.ChainId.HARMONY]: [
++        token_provider_1.WBTC_HARMONY,
++        token_provider_1.USDC_HARMONY,
++        token_provider_1.USDT_HARMONY,
++    ],
+ };
+ async function getV3CandidatePools({ tokenIn, tokenOut, routeType, routingConfig, subgraphProvider, tokenProvider, poolProvider, blockedTokenListProvider, chainId, }) {
+     var _a, _b, _c, _d, _e;
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/gas-model.js b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/gas-model.js
+index 2496ebe..70cd464 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/gas-model.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/gas-model.js
+@@ -27,6 +27,12 @@ exports.usdGasTokensByChain = {
+     [sdk_core_1.ChainId.BNB]: [token_provider_1.USDT_BNB, token_provider_1.USDC_BNB, token_provider_1.DAI_BNB],
+     [sdk_core_1.ChainId.AVALANCHE]: [token_provider_1.DAI_AVAX, token_provider_1.USDC_AVAX],
+     [sdk_core_1.ChainId.BASE]: [token_provider_1.USDC_BASE],
++    [sdk_core_1.ChainId.HARMONY]: [
++        token_provider_1.ETH_HARMONY,
++        token_provider_1.WBTC_HARMONY,
++        token_provider_1.USDT_HARMONY,
++        token_provider_1.USDC_HARMONY,
++    ],
+ };
+ /**
+  * Factory for building gas models that can be used with any route to generate
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/v3/gas-costs.js b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/v3/gas-costs.js
+index 76cd9f0..b9cd744 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/v3/gas-costs.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/routers/alpha-router/gas-models/v3/gas-costs.js
+@@ -33,6 +33,8 @@ const BASE_SWAP_COST = (id) => {
+             return bignumber_1.BigNumber.from(2000);
+         case sdk_core_1.ChainId.MOONBEAM:
+             return bignumber_1.BigNumber.from(2000);
++        case sdk_core_1.ChainId.HARMONY:
++            return bignumber_1.BigNumber.from(2000);    
+     }
+ };
+ exports.BASE_SWAP_COST = BASE_SWAP_COST;
+@@ -62,6 +64,8 @@ const COST_PER_INIT_TICK = (id) => {
+             return bignumber_1.BigNumber.from(31000);
+         case sdk_core_1.ChainId.MOONBEAM:
+             return bignumber_1.BigNumber.from(31000);
++        case sdk_core_1.ChainId.HARMONY:
++            return bignumber_1.BigNumber.from(31000);    
+     }
+ };
+ exports.COST_PER_INIT_TICK = COST_PER_INIT_TICK;
+@@ -90,6 +94,8 @@ const COST_PER_HOP = (id) => {
+             return bignumber_1.BigNumber.from(80000);
+         case sdk_core_1.ChainId.MOONBEAM:
+             return bignumber_1.BigNumber.from(80000);
++        case sdk_core_1.ChainId.HARMONY:
++            return bignumber_1.BigNumber.from(80000);    
+     }
+ };
+ exports.COST_PER_HOP = COST_PER_HOP;
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.d.ts b/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.d.ts
+index 88d38ff..e0092a8 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.d.ts
+@@ -56,6 +56,9 @@ export declare const ADDITIONAL_BASES: (tokenProvider: ITokenProvider) => Promis
+     8453?: {
+         [tokenAddress: string]: Token[];
+     } | undefined;
++    1666600000?: {
++        [tokenAddress: string]: Token[];
++    } | undefined;
+ }>;
+ /**
+  * Some tokens can only be swapped via certain pairs, so we override the list of bases that are considered for these
+@@ -113,5 +116,8 @@ export declare const CUSTOM_BASES: (tokenProvider: ITokenProvider) => Promise<{
+     8453?: {
+         [tokenAddress: string]: Token[];
+     } | undefined;
++    1666600000?: {
++        [tokenAddress: string]: Token[];
++    } | undefined;
+ }>;
+ export {};
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.js b/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.js
+index 94db888..3da3fab 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/routers/legacy-router/bases.js
+@@ -41,6 +41,16 @@ const BASES_TO_CHECK_TRADES_AGAINST = (_tokenProvider) => {
+         [sdk_core_1.ChainId.AVALANCHE]: [chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.AVALANCHE], token_provider_1.USDC_AVAX, token_provider_1.DAI_AVAX],
+         [sdk_core_1.ChainId.BASE]: [chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.BASE], token_provider_1.USDC_BASE],
+         [sdk_core_1.ChainId.BASE_GOERLI]: [chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.BASE_GOERLI]],
++        [sdk_core_1.ChainId.HARMONY]: [
++            chains_1.WRAPPED_NATIVE_CURRENCY[sdk_core_1.ChainId.HARMONY],
++            token_provider_1.ETH_HARMONY,
++            token_provider_1.WBTC_HARMONY,
++            token_provider_1.USDT_HARMONY,
++            token_provider_1.USDC_HARMONY,
++            token_provider_1.ARB_USDC_HARMONY,
++            token_provider_1.ARB_USDT_HARMONY,
++            token_provider_1.ARB_DAI_HARMONY,
++        ],
+     };
+ };
+ exports.BASES_TO_CHECK_TRADES_AGAINST = BASES_TO_CHECK_TRADES_AGAINST;
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/util/addresses.d.ts b/node_modules/@uniswap/smart-order-router/build/main/util/addresses.d.ts
+index aed5c17..fcbedbc 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/util/addresses.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/main/util/addresses.d.ts
+@@ -21,5 +21,5 @@ export declare function constructSameAddressMap<T extends string>(address: T, ad
+     [chainId: number]: T;
+ };
+ export declare const WETH9: {
+-    [chainId in Exclude<ChainId, ChainId.POLYGON | ChainId.POLYGON_MUMBAI | ChainId.CELO | ChainId.CELO_ALFAJORES | ChainId.GNOSIS | ChainId.MOONBEAM | ChainId.BNB | ChainId.AVALANCHE>]: Token;
++    [chainId in Exclude<ChainId, ChainId.POLYGON | ChainId.POLYGON_MUMBAI | ChainId.CELO | ChainId.CELO_ALFAJORES | ChainId.GNOSIS | ChainId.MOONBEAM | ChainId.BNB | ChainId.AVALANCHE | ChainId.HARMONY>]: Token;
+ };
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/util/addresses.js b/node_modules/@uniswap/smart-order-router/build/main/util/addresses.js
+index 9d77c31..cf7f57d 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/util/addresses.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/util/addresses.js
+@@ -9,13 +9,13 @@ exports.BNB_NONFUNGIBLE_POSITION_MANAGER_ADDRESS = sdk_core_1.CHAIN_TO_ADDRESSES
+ // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+ exports.BNB_SWAP_ROUTER_02_ADDRESS = sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].swapRouter02Address;
+ exports.BNB_V3_MIGRATOR_ADDRESS = sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].v3MigratorAddress;
+-exports.V3_CORE_FACTORY_ADDRESSES = Object.assign(Object.assign({}, constructSameAddressMap(v3_sdk_1.FACTORY_ADDRESS)), { [sdk_core_1.ChainId.CELO]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO].v3CoreFactoryAddress, [sdk_core_1.ChainId.CELO_ALFAJORES]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO_ALFAJORES].v3CoreFactoryAddress, [sdk_core_1.ChainId.OPTIMISM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.OPTIMISM_GOERLI].v3CoreFactoryAddress, [sdk_core_1.ChainId.SEPOLIA]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.SEPOLIA].v3CoreFactoryAddress, [sdk_core_1.ChainId.ARBITRUM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.ARBITRUM_GOERLI].v3CoreFactoryAddress, [sdk_core_1.ChainId.BNB]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].v3CoreFactoryAddress, [sdk_core_1.ChainId.AVALANCHE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.AVALANCHE].v3CoreFactoryAddress, [sdk_core_1.ChainId.BASE_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE_GOERLI].v3CoreFactoryAddress, [sdk_core_1.ChainId.BASE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE].v3CoreFactoryAddress });
+-exports.QUOTER_V2_ADDRESSES = Object.assign(Object.assign({}, constructSameAddressMap('0x61fFE014bA17989E743c5F6cB21bF9697530B21e')), { [sdk_core_1.ChainId.CELO]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO].quoterAddress, [sdk_core_1.ChainId.CELO_ALFAJORES]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO_ALFAJORES].quoterAddress, [sdk_core_1.ChainId.OPTIMISM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.OPTIMISM_GOERLI].quoterAddress, [sdk_core_1.ChainId.SEPOLIA]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.SEPOLIA].quoterAddress, [sdk_core_1.ChainId.ARBITRUM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.ARBITRUM_GOERLI].quoterAddress, [sdk_core_1.ChainId.BNB]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].quoterAddress, [sdk_core_1.ChainId.AVALANCHE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.AVALANCHE].quoterAddress, [sdk_core_1.ChainId.BASE_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE_GOERLI].quoterAddress, [sdk_core_1.ChainId.BASE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE].quoterAddress });
++exports.V3_CORE_FACTORY_ADDRESSES = Object.assign(Object.assign({}, constructSameAddressMap(v3_sdk_1.FACTORY_ADDRESS)), { [sdk_core_1.ChainId.CELO]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO].v3CoreFactoryAddress, [sdk_core_1.ChainId.CELO_ALFAJORES]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO_ALFAJORES].v3CoreFactoryAddress, [sdk_core_1.ChainId.OPTIMISM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.OPTIMISM_GOERLI].v3CoreFactoryAddress, [sdk_core_1.ChainId.SEPOLIA]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.SEPOLIA].v3CoreFactoryAddress, [sdk_core_1.ChainId.ARBITRUM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.ARBITRUM_GOERLI].v3CoreFactoryAddress, [sdk_core_1.ChainId.BNB]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].v3CoreFactoryAddress, [sdk_core_1.ChainId.AVALANCHE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.AVALANCHE].v3CoreFactoryAddress, [sdk_core_1.ChainId.BASE_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE_GOERLI].v3CoreFactoryAddress, [sdk_core_1.ChainId.BASE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE].v3CoreFactoryAddress, [sdk_core_1.ChainId.HARMONY]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.HARMONY].v3CoreFactoryAddress });
++exports.QUOTER_V2_ADDRESSES = Object.assign(Object.assign({}, constructSameAddressMap('0x61fFE014bA17989E743c5F6cB21bF9697530B21e')), { [sdk_core_1.ChainId.CELO]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO].quoterAddress, [sdk_core_1.ChainId.CELO_ALFAJORES]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO_ALFAJORES].quoterAddress, [sdk_core_1.ChainId.OPTIMISM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.OPTIMISM_GOERLI].quoterAddress, [sdk_core_1.ChainId.SEPOLIA]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.SEPOLIA].quoterAddress, [sdk_core_1.ChainId.ARBITRUM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.ARBITRUM_GOERLI].quoterAddress, [sdk_core_1.ChainId.BNB]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].quoterAddress, [sdk_core_1.ChainId.AVALANCHE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.AVALANCHE].quoterAddress, [sdk_core_1.ChainId.BASE_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE_GOERLI].quoterAddress, [sdk_core_1.ChainId.BASE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE].quoterAddress, [sdk_core_1.ChainId.HARMONY]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.HARMONY].quoterAddress });
+ exports.MIXED_ROUTE_QUOTER_V1_ADDRESSES = {
+     [sdk_core_1.ChainId.MAINNET]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.MAINNET].v1MixedRouteQuoterAddress,
+     [sdk_core_1.ChainId.GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.GOERLI].v1MixedRouteQuoterAddress,
+ };
+-exports.UNISWAP_MULTICALL_ADDRESSES = Object.assign(Object.assign({}, constructSameAddressMap('0x1F98415757620B543A52E61c46B32eB19261F984')), { [sdk_core_1.ChainId.CELO]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO].multicallAddress, [sdk_core_1.ChainId.CELO_ALFAJORES]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO_ALFAJORES].multicallAddress, [sdk_core_1.ChainId.OPTIMISM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.OPTIMISM_GOERLI].multicallAddress, [sdk_core_1.ChainId.SEPOLIA]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.SEPOLIA].multicallAddress, [sdk_core_1.ChainId.ARBITRUM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.ARBITRUM_GOERLI].multicallAddress, [sdk_core_1.ChainId.BNB]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].multicallAddress, [sdk_core_1.ChainId.AVALANCHE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.AVALANCHE].multicallAddress, [sdk_core_1.ChainId.BASE_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE_GOERLI].multicallAddress, [sdk_core_1.ChainId.BASE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE].multicallAddress });
++exports.UNISWAP_MULTICALL_ADDRESSES = Object.assign(Object.assign({}, constructSameAddressMap('0x1F98415757620B543A52E61c46B32eB19261F984')), { [sdk_core_1.ChainId.CELO]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO].multicallAddress, [sdk_core_1.ChainId.CELO_ALFAJORES]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.CELO_ALFAJORES].multicallAddress, [sdk_core_1.ChainId.OPTIMISM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.OPTIMISM_GOERLI].multicallAddress, [sdk_core_1.ChainId.SEPOLIA]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.SEPOLIA].multicallAddress, [sdk_core_1.ChainId.ARBITRUM_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.ARBITRUM_GOERLI].multicallAddress, [sdk_core_1.ChainId.BNB]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BNB].multicallAddress, [sdk_core_1.ChainId.AVALANCHE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.AVALANCHE].multicallAddress, [sdk_core_1.ChainId.BASE_GOERLI]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE_GOERLI].multicallAddress, [sdk_core_1.ChainId.BASE]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.BASE].multicallAddress, [sdk_core_1.ChainId.HARMONY]: sdk_core_1.CHAIN_TO_ADDRESSES_MAP[sdk_core_1.ChainId.HARMONY].multicallAddress });
+ const SWAP_ROUTER_02_ADDRESSES = (chainId) => {
+     if (chainId == sdk_core_1.ChainId.BNB) {
+         return exports.BNB_SWAP_ROUTER_02_ADDRESS;
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/util/chains.d.ts b/node_modules/@uniswap/smart-order-router/build/main/util/chains.d.ts
+index 60b2271..af36bd4 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/util/chains.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/main/util/chains.d.ts
+@@ -21,7 +21,8 @@ export declare enum ChainName {
+     BNB = "bnb-mainnet",
+     AVALANCHE = "avalanche-mainnet",
+     BASE = "base-mainnet",
+-    BASE_GOERLI = "base-goerli"
++    BASE_GOERLI = "base-goerli",
++    HARMONY = "harmony"
+ }
+ export declare enum NativeCurrencyName {
+     ETHER = "ETH",
+@@ -30,7 +31,8 @@ export declare enum NativeCurrencyName {
+     GNOSIS = "XDAI",
+     MOONBEAM = "GLMR",
+     BNB = "BNB",
+-    AVALANCHE = "AVAX"
++    AVALANCHE = "AVAX",
++    HARMONY = "ONE"
+ }
+ export declare const NATIVE_NAMES_BY_ID: {
+     [chainId: number]: string[];
+diff --git a/node_modules/@uniswap/smart-order-router/build/main/util/chains.js b/node_modules/@uniswap/smart-order-router/build/main/util/chains.js
+index 902362a..6fa075a 100644
+--- a/node_modules/@uniswap/smart-order-router/build/main/util/chains.js
++++ b/node_modules/@uniswap/smart-order-router/build/main/util/chains.js
+@@ -18,6 +18,7 @@ exports.SUPPORTED_CHAINS = [
+     sdk_core_1.ChainId.BNB,
+     sdk_core_1.ChainId.AVALANCHE,
+     sdk_core_1.ChainId.BASE,
++    sdk_core_1.ChainId.HARMONY
+     // Gnosis and Moonbeam don't yet have contracts deployed yet
+ ];
+ exports.V2_SUPPORTED = [
+@@ -77,6 +78,8 @@ const ID_TO_CHAIN_ID = (id) => {
+             return sdk_core_1.ChainId.BASE;
+         case 84531:
+             return sdk_core_1.ChainId.BASE_GOERLI;
++        case 1666600000:
++            return sdk_core_1.ChainId.HARMONY;
+         default:
+             throw new Error(`Unknown chain id: ${id}`);
+     }
+@@ -101,6 +104,7 @@ var ChainName;
+     ChainName["AVALANCHE"] = "avalanche-mainnet";
+     ChainName["BASE"] = "base-mainnet";
+     ChainName["BASE_GOERLI"] = "base-goerli";
++    ChainName["HARMONY"] = "harmony";
+ })(ChainName = exports.ChainName || (exports.ChainName = {}));
+ var NativeCurrencyName;
+ (function (NativeCurrencyName) {
+@@ -112,6 +116,7 @@ var NativeCurrencyName;
+     NativeCurrencyName["MOONBEAM"] = "GLMR";
+     NativeCurrencyName["BNB"] = "BNB";
+     NativeCurrencyName["AVALANCHE"] = "AVAX";
++    NativeCurrencyName["HARMONY"] = "ONE";
+ })(NativeCurrencyName = exports.NativeCurrencyName || (exports.NativeCurrencyName = {}));
+ exports.NATIVE_NAMES_BY_ID = {
+     [sdk_core_1.ChainId.MAINNET]: [
+@@ -119,6 +124,7 @@ exports.NATIVE_NAMES_BY_ID = {
+         'ETHER',
+         '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+     ],
++    [sdk_core_1.ChainId.HARMONY]: ['ONE'],
+     [sdk_core_1.ChainId.GOERLI]: [
+         'ETH',
+         'ETHER',
+@@ -193,6 +199,7 @@ exports.NATIVE_CURRENCY = {
+     [sdk_core_1.ChainId.BNB]: NativeCurrencyName.BNB,
+     [sdk_core_1.ChainId.AVALANCHE]: NativeCurrencyName.AVALANCHE,
+     [sdk_core_1.ChainId.BASE]: NativeCurrencyName.ETHER,
++    [sdk_core_1.ChainId.HARMONY]: NativeCurrencyName.HARMONY,
+ };
+ const ID_TO_NETWORK_NAME = (id) => {
+     switch (id) {
+@@ -230,6 +237,8 @@ const ID_TO_NETWORK_NAME = (id) => {
+             return ChainName.BASE;
+         case 84531:
+             return ChainName.BASE_GOERLI;
++        case 1666600000:
++            return ChainName.HARMONY;
+         default:
+             throw new Error(`Unknown chain id: ${id}`);
+     }
+@@ -266,6 +275,8 @@ const ID_TO_PROVIDER = (id) => {
+             return process.env.JSON_RPC_PROVIDER_AVALANCHE;
+         case sdk_core_1.ChainId.BASE:
+             return process.env.JSON_RPC_PROVIDER_BASE;
++        case sdk_core_1.ChainId.HARMONY:
++            return process.env.JSON_RPC_PROVIDER_HARMONY;
+         default:
+             throw new Error(`Chain id: ${id} not supported`);
+     }
+@@ -289,7 +300,8 @@ exports.WRAPPED_NATIVE_CURRENCY = {
+     [sdk_core_1.ChainId.MOONBEAM]: new sdk_core_1.Token(sdk_core_1.ChainId.MOONBEAM, '0xAcc15dC74880C9944775448304B263D191c6077F', 18, 'WGLMR', 'Wrapped GLMR'),
+     [sdk_core_1.ChainId.AVALANCHE]: new sdk_core_1.Token(sdk_core_1.ChainId.AVALANCHE, '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7', 18, 'WAVAX', 'Wrapped AVAX'),
+     [sdk_core_1.ChainId.BASE]: new sdk_core_1.Token(sdk_core_1.ChainId.BASE, '0x4200000000000000000000000000000000000006', 18, 'WETH', 'Wrapped Ether'),
+-    [sdk_core_1.ChainId.BASE_GOERLI]: new sdk_core_1.Token(sdk_core_1.ChainId.BASE_GOERLI, '0x4200000000000000000000000000000000000006', 18, 'WETH', 'Wrapped Ether')
++    [sdk_core_1.ChainId.BASE_GOERLI]: new sdk_core_1.Token(sdk_core_1.ChainId.BASE_GOERLI, '0x4200000000000000000000000000000000000006', 18, 'WETH', 'Wrapped Ether'),
++    [sdk_core_1.ChainId.HARMONY]: new sdk_core_1.Token(sdk_core_1.ChainId.HARMONY, '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a', 18, 'WONE', 'Wrapped ONE'),
+ };
+ function isMatic(chainId) {
+     return chainId === sdk_core_1.ChainId.POLYGON_MUMBAI || chainId === sdk_core_1.ChainId.POLYGON;
+@@ -313,6 +325,30 @@ class MaticNativeCurrency extends sdk_core_1.NativeCurrency {
+         super(chainId, 18, 'MATIC', 'Polygon Matic');
+     }
+ }
++
++function isHarmony(chainId) {
++	return chainId === sdk_core_1.ChainId.HARMONY;
++}
++class HarmonyNativeCurrency extends sdk_core_1.NativeCurrency {
++    equals(other) {
++        return other.isNative && other.chainId === this.chainId;
++    }
++    get wrapped() {
++        if (!isHarmony(this.chainId))
++            throw new Error('Not harmony');
++        const nativeCurrency = exports.WRAPPED_NATIVE_CURRENCY[this.chainId];
++        if (nativeCurrency) {
++            return nativeCurrency;
++        }
++        throw new Error(`Does not support this chain ${this.chainId}`);
++    }
++    constructor(chainId) {
++        if (!isHarmony(chainId))
++            throw new Error('Not harmony');
++        super(chainId, 18, 'ONE', 'ONE');
++    }
++}
++
+ function isCelo(chainId) {
+     return chainId === sdk_core_1.ChainId.CELO_ALFAJORES || chainId === sdk_core_1.ChainId.CELO;
+ }
+@@ -460,6 +496,9 @@ function nativeOnChain(chainId) {
+     else if (isAvax(chainId)) {
+         cachedNativeCurrency[chainId] = new AvalancheNativeCurrency(chainId);
+     }
++    else if (isHarmony(chainId)) {
++        cachedNativeCurrency[chainId] = new HarmonyNativeCurrency(chainId);
++    }
+     else {
+         cachedNativeCurrency[chainId] = ExtendedEther.onChain(chainId);
+     }
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/providers/caching-token-provider.js b/node_modules/@uniswap/smart-order-router/build/module/providers/caching-token-provider.js
+index eff50f4..a228c39 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/providers/caching-token-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/providers/caching-token-provider.js
+@@ -1,7 +1,7 @@
+ import { ChainId, Token } from '@uniswap/sdk-core';
+ import _ from 'lodash';
+ import { log, WRAPPED_NATIVE_CURRENCY } from '../util';
+-import { BTC_BNB, BUSD_BNB, CELO, CELO_ALFAJORES, CEUR_CELO, CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_CELO, DAI_CELO_ALFAJORES, DAI_MAINNET, DAI_MOONBEAM, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, ETH_BNB, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_ARBITRUM, WBTC_MAINNET, WBTC_MOONBEAM, WBTC_OPTIMISM, WBTC_OPTIMISM_GOERLI, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, } from './token-provider';
++import { BTC_BNB, BUSD_BNB, CELO, CELO_ALFAJORES, CEUR_CELO, CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_CELO, DAI_CELO_ALFAJORES, DAI_MAINNET, DAI_MOONBEAM, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, ETH_BNB, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_ARBITRUM, WBTC_MAINNET, WBTC_MOONBEAM, WBTC_OPTIMISM, WBTC_OPTIMISM_GOERLI, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, ETH_HARMONY, WBTC_HARMONY, USDT_HARMONY, USDC_HARMONY, ARB_USDC_HARMONY, ARB_USDT_HARMONY, ARB_DAI_HARMONY, } from './token-provider';
+ // These tokens will added to the Token cache on initialization.
+ export const CACHE_SEED_TOKENS = {
+     [ChainId.MAINNET]: {
+@@ -86,6 +86,16 @@ export const CACHE_SEED_TOKENS = {
+     [ChainId.BASE]: {
+         USDC: USDC_BASE,
+         WETH: WRAPPED_NATIVE_CURRENCY[ChainId.BASE],
++    },
++    [ChainId.HARMONY]: {
++        USDC: USDC_HARMONY,
++        USDT: USDT_HARMONY,
++        WBTC: WBTC_HARMONY,
++        ETH: ETH_HARMONY,
++        WONE: WRAPPED_NATIVE_CURRENCY[ChainId.HARMONY],
++        ARB_USDC_HARMONY,
++        ARB_USDT_HARMONY,
++        ARB_DAI_HARMONY,
+     }
+     // Currently we do not have providers for Moonbeam mainnet or Gnosis testnet
+ };
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.d.ts b/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.d.ts
+index ee243bc..4469ae4 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.d.ts
+@@ -86,6 +86,14 @@ export declare const USDC_MOONBEAM: Token;
+ export declare const WGLMR_MOONBEAM: Token;
+ export declare const DAI_MOONBEAM: Token;
+ export declare const WBTC_MOONBEAM: Token;
++export declare const WBTC_HARMONY: Token;
++export declare const ETH_HARMONY: Token;
++export declare const USDT_HARMONY: Token;
++export declare const USDC_HARMONY: Token;
++export declare const ARB_USDC_HARMONY: Token;
++export declare const ARB_USDT_HARMONY: Token;
++export declare const ARB_DAI_HARMONY: Token;
++
+ export declare class TokenProvider implements ITokenProvider {
+     private chainId;
+     protected multicall2Provider: IMulticallProvider;
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.js b/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.js
+index 3b1efd9..e22ac24 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/providers/token-provider.js
+@@ -81,6 +81,14 @@ export const USDC_MOONBEAM = new Token(ChainId.MOONBEAM, '0x818ec0A7Fe18Ff942699
+ export const WGLMR_MOONBEAM = new Token(ChainId.MOONBEAM, '0xAcc15dC74880C9944775448304B263D191c6077F', 18, 'WGLMR', 'Wrapped GLMR');
+ export const DAI_MOONBEAM = new Token(ChainId.MOONBEAM, '0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b', 6, 'DAI', 'Dai on moonbeam bridged using Multichain');
+ export const WBTC_MOONBEAM = new Token(ChainId.MOONBEAM, '0x922D641a426DcFFaeF11680e5358F34d97d112E1', 8, 'WBTC', 'Wrapped BTC bridged using Multichain');
++export const WBTC_HARMONY = new Token(ChainId.HARMONY, '0x118f50d23810c5E09Ebffb42d7D3328dbF75C2c2', 8, '1WBTC', 'Wrapped BTC');
++export const ETH_HARMONY = new Token(ChainId.HARMONY, '0x4cC435d7b9557d54d6EF02d69Bbf72634905Bf11', 18, '1ETH', 'ETH');
++export const USDT_HARMONY = new Token(ChainId.HARMONY, '0xF2732e8048f1a411C63e2df51d08f4f52E598005', 6, '1USDT', 'Tether USD');
++export const USDC_HARMONY = new Token(ChainId.HARMONY, '0xBC594CABd205bD993e7FfA6F3e9ceA75c1110da5', 6, '1USDC', 'USD Coin');
++export const ARB_USDC_HARMONY = new Token(ChainId.HARMONY, '0x9b5fae311A4A4b9d838f301C9c27b55d19BAa4Fb', 6, 'arbUSDC', 'USD Coin (Arb1)');
++export const ARB_USDT_HARMONY = new Token(ChainId.HARMONY, '0x2DA729BA5231d2C79290aBA4a8b85a5c94dA4724', 6, 'arbUSDT', 'Tether USD');
++export const ARB_DAI_HARMONY = new Token(ChainId.HARMONY, '0x7C07d01C9DaB5aBB09CE2b42242a7570F25fC2CC', 18, 'arbDAI', 'Dai Stablecoin');
++
+ export class TokenProvider {
+     constructor(chainId, multicall2Provider) {
+         this.chainId = chainId;
+@@ -219,6 +227,8 @@ export const DAI_ON = (chainId) => {
+             return DAI_BNB;
+         case ChainId.AVALANCHE:
+             return DAI_AVAX;
++        case ChainId.HARMONY:
++            return ARB_DAI_HARMONY;   
+         default:
+             throw new Error(`Chain id: ${chainId} not supported`);
+     }
+@@ -237,6 +247,8 @@ export const USDT_ON = (chainId) => {
+             return USDT_ARBITRUM;
+         case ChainId.BNB:
+             return USDT_BNB;
++        case ChainId.HARMONY:
++            return USDT_HARMONY;
+         default:
+             throw new Error(`Chain id: ${chainId} not supported`);
+     }
+@@ -273,6 +285,8 @@ export const USDC_ON = (chainId) => {
+             return USDC_BASE;
+         case ChainId.BASE_GOERLI:
+             return USDC_BASE_GOERLI;
++        case ChainId.HARMONY:
++            return USDC_HARMONY;
+         default:
+             throw new Error(`Chain id: ${chainId} not supported`);
+     }
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/providers/v2/static-subgraph-provider.js b/node_modules/@uniswap/smart-order-router/build/module/providers/v2/static-subgraph-provider.js
+index 68d11d3..66fb1a0 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/providers/v2/static-subgraph-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/providers/v2/static-subgraph-provider.js
+@@ -14,7 +14,7 @@ const BASES_TO_CHECK_TRADES_AGAINST = {
+     ],
+     [ChainId.GOERLI]: [WRAPPED_NATIVE_CURRENCY[ChainId.GOERLI]],
+     [ChainId.SEPOLIA]: [WRAPPED_NATIVE_CURRENCY[ChainId.SEPOLIA]],
+-    //v2 not deployed on [optimism, arbitrum, polygon, celo, gnosis, moonbeam, bnb, avalanche] and their testnets
++    //v2 not deployed on [optimism, arbitrum, polygon, celo, gnosis, moonbeam, harmony, bnb, avalanche] and their testnets
+     [ChainId.OPTIMISM]: [],
+     [ChainId.ARBITRUM_ONE]: [],
+     [ChainId.ARBITRUM_GOERLI]: [],
+@@ -28,7 +28,8 @@ const BASES_TO_CHECK_TRADES_AGAINST = {
+     [ChainId.BNB]: [],
+     [ChainId.AVALANCHE]: [],
+     [ChainId.BASE_GOERLI]: [],
+-    [ChainId.BASE]: []
++    [ChainId.BASE]: [],
++    [ChainId.HARMONY]: [],
+ };
+ /**
+  * Provider that does not get data from an external source and instead returns
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/providers/v3/static-subgraph-provider.js b/node_modules/@uniswap/smart-order-router/build/module/providers/v3/static-subgraph-provider.js
+index 26f8306..eb70ff1 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/providers/v3/static-subgraph-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/providers/v3/static-subgraph-provider.js
+@@ -6,7 +6,7 @@ import _ from 'lodash';
+ import { unparseFeeAmount } from '../../util/amounts';
+ import { WRAPPED_NATIVE_CURRENCY } from '../../util/chains';
+ import { log } from '../../util/log';
+-import { ARB_ARBITRUM, BTC_BNB, BUSD_BNB, CELO, CELO_ALFAJORES, CEUR_CELO, CEUR_CELO_ALFAJORES, CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_CELO, DAI_CELO_ALFAJORES, DAI_GOERLI, DAI_MAINNET, DAI_MOONBEAM, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, ETH_BNB, OP_OPTIMISM, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_GOERLI, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_GOERLI, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_ARBITRUM, WBTC_GNOSIS, WBTC_GOERLI, WBTC_MAINNET, WBTC_MOONBEAM, WBTC_OPTIMISM, WBTC_OPTIMISM_GOERLI, WETH_POLYGON, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, WXDAI_GNOSIS } from '../token-provider';
++import { ARB_ARBITRUM, BTC_BNB, BUSD_BNB, CELO, CELO_ALFAJORES, CEUR_CELO, CEUR_CELO_ALFAJORES, CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_CELO, DAI_CELO_ALFAJORES, DAI_GOERLI, DAI_MAINNET, DAI_MOONBEAM, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, ETH_BNB, OP_OPTIMISM, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_GOERLI, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_GOERLI, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_ARBITRUM, WBTC_GNOSIS, WBTC_GOERLI, WBTC_MAINNET, WBTC_MOONBEAM, WBTC_OPTIMISM, WBTC_OPTIMISM_GOERLI, WETH_POLYGON, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, WXDAI_GNOSIS, ETH_HARMONY, WBTC_HARMONY, USDT_HARMONY, USDC_HARMONY, ARB_USDC_HARMONY, ARB_USDT_HARMONY, ARB_DAI_HARMONY, } from '../token-provider';
+ const BASES_TO_CHECK_TRADES_AGAINST = {
+     [ChainId.MAINNET]: [
+         WRAPPED_NATIVE_CURRENCY[ChainId.MAINNET],
+@@ -91,6 +91,16 @@ const BASES_TO_CHECK_TRADES_AGAINST = {
+     ],
+     [ChainId.BASE_GOERLI]: [WRAPPED_NATIVE_CURRENCY[ChainId.BASE_GOERLI]],
+     [ChainId.BASE]: [WRAPPED_NATIVE_CURRENCY[ChainId.BASE], USDC_BASE],
++    [ChainId.HARMONY]: [
++        WRAPPED_NATIVE_CURRENCY[ChainId.HARMONY],
++        ETH_HARMONY,
++        WBTC_HARMONY,
++        USDT_HARMONY,
++        USDC_HARMONY,
++        ARB_USDC_HARMONY,
++        ARB_USDT_HARMONY,
++        ARB_DAI_HARMONY,
++    ],
+ };
+ /**
+  * Provider that uses a hardcoded list of V3 pools to generate a list of subgraph pools.
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/providers/v3/subgraph-provider.js b/node_modules/@uniswap/smart-order-router/build/module/providers/v3/subgraph-provider.js
+index 9820ba5..bc752d8 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/providers/v3/subgraph-provider.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/providers/v3/subgraph-provider.js
+@@ -16,6 +16,7 @@ const SUBGRAPH_URL_BY_CHAIN = {
+     [ChainId.BNB]: 'https://api.thegraph.com/subgraphs/name/ilyamk/uniswap-v3---bnb-chain',
+     [ChainId.AVALANCHE]: 'https://api.thegraph.com/subgraphs/name/lynnshaoyu/uniswap-v3-avax',
+     [ChainId.BASE]: 'https://api.studio.thegraph.com/query/48211/uniswap-v3-base/v0.0.1',
++    [ChainId.HARMONY]: 'https://api.thegraph.com/subgraphs/name/nick8319/uniswap-v3-harmony',
+ };
+ const PAGE_SIZE = 1000; // 1k is max possible query size from subgraph.
+ export class V3SubgraphProvider {
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/alpha-router.js b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/alpha-router.js
+index f4e9599..3552006 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/alpha-router.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/alpha-router.js
+@@ -99,6 +99,7 @@ export class AlphaRouter {
+                     break;
+                 case ChainId.CELO:
+                 case ChainId.CELO_ALFAJORES:
++                case ChainId.HARMONY:
+                     this.onChainQuoteProvider = new OnChainQuoteProvider(chainId, provider, this.multicall2Provider, {
+                         retries: 2,
+                         minTimeout: 100,
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/config.js b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/config.js
+index fce7278..484d7aa 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/config.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/config.js
+@@ -36,6 +36,7 @@ export const DEFAULT_ROUTING_CONFIG_BY_CHAIN = (chainId) => {
+         case ChainId.ARBITRUM_GOERLI:
+         case ChainId.CELO:
+         case ChainId.CELO_ALFAJORES:
++        case ChainId.HARMONY:
+             return {
+                 v2PoolSelection: {
+                     topN: 3,
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/functions/get-candidate-pools.js b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/functions/get-candidate-pools.js
+index e7bc620..3138467 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/functions/get-candidate-pools.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/functions/get-candidate-pools.js
+@@ -2,7 +2,7 @@ import { Protocol } from '@uniswap/router-sdk';
+ import { ChainId, TradeType } from '@uniswap/sdk-core';
+ import { FeeAmount } from '@uniswap/v3-sdk';
+ import _ from 'lodash';
+-import { CELO, CELO_ALFAJORES, CEUR_CELO, CEUR_CELO_ALFAJORES, CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_MAINNET, DAI_MOONBEAM, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, DAI_SEPOLIA, FEI_MAINNET, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_ARBITRUM, WBTC_GNOSIS, WBTC_MAINNET, WBTC_MOONBEAM, WBTC_OPTIMISM, WBTC_OPTIMISM_GOERLI, WGLMR_MOONBEAM, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, WXDAI_GNOSIS, } from '../../../providers/token-provider';
++import { CELO, CELO_ALFAJORES, CEUR_CELO, CEUR_CELO_ALFAJORES, CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_MAINNET, DAI_MOONBEAM, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, DAI_SEPOLIA, FEI_MAINNET, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_HARMONY, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_HARMONY, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_ARBITRUM, WBTC_GNOSIS, WBTC_HARMONY, WBTC_MAINNET, WBTC_MOONBEAM, WBTC_OPTIMISM, WBTC_OPTIMISM_GOERLI, WGLMR_MOONBEAM, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, WXDAI_GNOSIS, } from '../../../providers/token-provider';
+ import { WRAPPED_NATIVE_CURRENCY } from '../../../util';
+ import { parseFeeAmount, unparseFeeAmount } from '../../../util/amounts';
+ import { log } from '../../../util/log';
+@@ -66,6 +66,11 @@ const baseTokensByChain = {
+     [ChainId.BASE]: [
+         USDC_BASE,
+     ],
++    [ChainId.HARMONY]: [
++        WBTC_HARMONY,
++        USDC_HARMONY,
++        USDT_HARMONY,
++    ],
+ };
+ export async function getV3CandidatePools({ tokenIn, tokenOut, routeType, routingConfig, subgraphProvider, tokenProvider, poolProvider, blockedTokenListProvider, chainId, }) {
+     var _a, _b, _c, _d, _e;
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/gas-model.js b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/gas-model.js
+index 97cba0c..47013e9 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/gas-model.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/gas-model.js
+@@ -1,5 +1,5 @@
+ import { ChainId } from '@uniswap/sdk-core';
+-import { CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_GOERLI, DAI_MAINNET, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, DAI_SEPOLIA, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_GOERLI, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_GOERLI, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_GOERLI, } from '../../../providers/token-provider';
++import { CUSD_CELO, CUSD_CELO_ALFAJORES, DAI_ARBITRUM, DAI_AVAX, DAI_BNB, DAI_GOERLI, DAI_MAINNET, DAI_OPTIMISM, DAI_OPTIMISM_GOERLI, DAI_POLYGON_MUMBAI, DAI_SEPOLIA, USDC_ARBITRUM, USDC_ARBITRUM_GOERLI, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_ETHEREUM_GNOSIS, USDC_GOERLI, USDC_MAINNET, USDC_MOONBEAM, USDC_OPTIMISM, USDC_OPTIMISM_GOERLI, USDC_POLYGON, USDC_SEPOLIA, USDT_ARBITRUM, USDT_BNB, USDT_GOERLI, USDT_MAINNET, USDT_OPTIMISM, USDT_OPTIMISM_GOERLI, WBTC_GOERLI, ETH_HARMONY, WBTC_HARMONY, USDT_HARMONY, USDC_HARMONY, } from '../../../providers/token-provider';
+ // When adding new usd gas tokens, ensure the tokens are ordered 
+ // from tokens with highest decimals to lowest decimals. For example,
+ // DAI_AVAX has 18 decimals and comes before USDC_AVAX which has 6 decimals.
+@@ -24,6 +24,12 @@ export const usdGasTokensByChain = {
+     [ChainId.BNB]: [USDT_BNB, USDC_BNB, DAI_BNB],
+     [ChainId.AVALANCHE]: [DAI_AVAX, USDC_AVAX],
+     [ChainId.BASE]: [USDC_BASE],
++    [ChainId.HARMONY]: [
++        ETH_HARMONY,
++        WBTC_HARMONY,
++        USDT_HARMONY,
++        USDC_HARMONY,
++    ],
+ };
+ /**
+  * Factory for building gas models that can be used with any route to generate
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/v3/gas-costs.js b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/v3/gas-costs.js
+index 542d9e5..866c172 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/v3/gas-costs.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/routers/alpha-router/gas-models/v3/gas-costs.js
+@@ -30,6 +30,8 @@ export const BASE_SWAP_COST = (id) => {
+             return BigNumber.from(2000);
+         case ChainId.MOONBEAM:
+             return BigNumber.from(2000);
++        case ChainId.HARMONY:
++            return BigNumber.from(2000);    
+     }
+ };
+ export const COST_PER_INIT_TICK = (id) => {
+@@ -58,6 +60,8 @@ export const COST_PER_INIT_TICK = (id) => {
+             return BigNumber.from(31000);
+         case ChainId.MOONBEAM:
+             return BigNumber.from(31000);
++        case ChainId.HARMONY:
++            return BigNumber.from(31000);
+     }
+ };
+ export const COST_PER_HOP = (id) => {
+@@ -85,6 +89,8 @@ export const COST_PER_HOP = (id) => {
+             return BigNumber.from(80000);
+         case ChainId.MOONBEAM:
+             return BigNumber.from(80000);
++        case ChainId.HARMONY:
++            return BigNumber.from(8000);
+     }
+ };
+ export const SINGLE_HOP_OVERHEAD = (_id) => {
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.d.ts b/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.d.ts
+index 88d38ff..e0092a8 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.d.ts
+@@ -56,6 +56,9 @@ export declare const ADDITIONAL_BASES: (tokenProvider: ITokenProvider) => Promis
+     8453?: {
+         [tokenAddress: string]: Token[];
+     } | undefined;
++    1666600000?: {
++        [tokenAddress: string]: Token[];
++    } | undefined;
+ }>;
+ /**
+  * Some tokens can only be swapped via certain pairs, so we override the list of bases that are considered for these
+@@ -113,5 +116,8 @@ export declare const CUSTOM_BASES: (tokenProvider: ITokenProvider) => Promise<{
+     8453?: {
+         [tokenAddress: string]: Token[];
+     } | undefined;
++    1666600000?: {
++        [tokenAddress: string]: Token[];
++    } | undefined;
+ }>;
+ export {};
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.js b/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.js
+index b0702eb..8084511 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/routers/legacy-router/bases.js
+@@ -1,6 +1,6 @@
+ /* eslint-disable @typescript-eslint/no-non-null-assertion */
+ import { ChainId } from '@uniswap/sdk-core';
+-import { BTC_BNB, BUSD_BNB, DAI_AVAX, DAI_BNB, DAI_MAINNET, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_MAINNET, USDT_BNB, USDT_MAINNET, WBTC_MAINNET, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, } from '../../providers/token-provider';
++import { BTC_BNB, BUSD_BNB, DAI_AVAX, DAI_BNB, DAI_MAINNET, USDC_AVAX, USDC_BASE, USDC_BNB, USDC_MAINNET, USDT_BNB, USDT_MAINNET, WBTC_MAINNET, WMATIC_POLYGON, WMATIC_POLYGON_MUMBAI, ETH_HARMONY, WBTC_HARMONY, USDT_HARMONY, USDC_HARMONY, ARB_USDC_HARMONY, ARB_USDT_HARMONY, ARB_DAI_HARMONY } from '../../providers/token-provider';
+ import { WRAPPED_NATIVE_CURRENCY } from '../../util/chains';
+ export const BASES_TO_CHECK_TRADES_AGAINST = (_tokenProvider) => {
+     return {
+@@ -38,6 +38,16 @@ export const BASES_TO_CHECK_TRADES_AGAINST = (_tokenProvider) => {
+         [ChainId.AVALANCHE]: [WRAPPED_NATIVE_CURRENCY[ChainId.AVALANCHE], USDC_AVAX, DAI_AVAX],
+         [ChainId.BASE]: [WRAPPED_NATIVE_CURRENCY[ChainId.BASE], USDC_BASE],
+         [ChainId.BASE_GOERLI]: [WRAPPED_NATIVE_CURRENCY[ChainId.BASE_GOERLI]],
++        [ChainId.HARMONY]: [
++            WRAPPED_NATIVE_CURRENCY[ChainId.HARMONY],
++            ETH_HARMONY,
++            WBTC_HARMONY,
++            USDT_HARMONY,
++            USDC_HARMONY,
++            ARB_USDC_HARMONY,
++            ARB_USDT_HARMONY,
++            ARB_DAI_HARMONY,
++        ]
+     };
+ };
+ const getBasePairByAddress = async (tokenProvider, _chainId, fromAddress, toAddress) => {
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/util/addresses.d.ts b/node_modules/@uniswap/smart-order-router/build/module/util/addresses.d.ts
+index aed5c17..fcbedbc 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/util/addresses.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/module/util/addresses.d.ts
+@@ -21,5 +21,5 @@ export declare function constructSameAddressMap<T extends string>(address: T, ad
+     [chainId: number]: T;
+ };
+ export declare const WETH9: {
+-    [chainId in Exclude<ChainId, ChainId.POLYGON | ChainId.POLYGON_MUMBAI | ChainId.CELO | ChainId.CELO_ALFAJORES | ChainId.GNOSIS | ChainId.MOONBEAM | ChainId.BNB | ChainId.AVALANCHE>]: Token;
++    [chainId in Exclude<ChainId, ChainId.POLYGON | ChainId.POLYGON_MUMBAI | ChainId.CELO | ChainId.CELO_ALFAJORES | ChainId.GNOSIS | ChainId.MOONBEAM | ChainId.BNB | ChainId.AVALANCHE | ChainId.HARMONY>]: Token;
+ };
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/util/addresses.js b/node_modules/@uniswap/smart-order-router/build/module/util/addresses.js
+index 2a85de3..37ae745 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/util/addresses.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/util/addresses.js
+@@ -17,6 +17,7 @@ export const V3_CORE_FACTORY_ADDRESSES = {
+     [ChainId.AVALANCHE]: CHAIN_TO_ADDRESSES_MAP[ChainId.AVALANCHE].v3CoreFactoryAddress,
+     [ChainId.BASE_GOERLI]: CHAIN_TO_ADDRESSES_MAP[ChainId.BASE_GOERLI].v3CoreFactoryAddress,
+     [ChainId.BASE]: CHAIN_TO_ADDRESSES_MAP[ChainId.BASE].v3CoreFactoryAddress,
++    [ChainId.HARMONY]: CHAIN_TO_ADDRESSES_MAP[ChainId.HARMONY].v3CoreFactoryAddress
+     // TODO: Gnosis + Moonbeam contracts to be deployed
+ };
+ export const QUOTER_V2_ADDRESSES = {
+@@ -30,6 +31,7 @@ export const QUOTER_V2_ADDRESSES = {
+     [ChainId.AVALANCHE]: CHAIN_TO_ADDRESSES_MAP[ChainId.AVALANCHE].quoterAddress,
+     [ChainId.BASE_GOERLI]: CHAIN_TO_ADDRESSES_MAP[ChainId.BASE_GOERLI].quoterAddress,
+     [ChainId.BASE]: CHAIN_TO_ADDRESSES_MAP[ChainId.BASE].quoterAddress,
++    [ChainId.HARMONY]: CHAIN_TO_ADDRESSES_MAP[ChainId.HARMONY].quoterAddress
+     // TODO: Gnosis + Moonbeam contracts to be deployed
+ };
+ export const MIXED_ROUTE_QUOTER_V1_ADDRESSES = {
+@@ -47,6 +49,7 @@ export const UNISWAP_MULTICALL_ADDRESSES = {
+     [ChainId.AVALANCHE]: CHAIN_TO_ADDRESSES_MAP[ChainId.AVALANCHE].multicallAddress,
+     [ChainId.BASE_GOERLI]: CHAIN_TO_ADDRESSES_MAP[ChainId.BASE_GOERLI].multicallAddress,
+     [ChainId.BASE]: CHAIN_TO_ADDRESSES_MAP[ChainId.BASE].multicallAddress,
++    [ChainId.HARMONY]: CHAIN_TO_ADDRESSES_MAP[ChainId.HARMONY].multicallAddress,
+     // TODO: Gnosis + Moonbeam contracts to be deployed
+ };
+ export const SWAP_ROUTER_02_ADDRESSES = (chainId) => {
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/util/chains.d.ts b/node_modules/@uniswap/smart-order-router/build/module/util/chains.d.ts
+index 60b2271..af36bd4 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/util/chains.d.ts
++++ b/node_modules/@uniswap/smart-order-router/build/module/util/chains.d.ts
+@@ -21,7 +21,8 @@ export declare enum ChainName {
+     BNB = "bnb-mainnet",
+     AVALANCHE = "avalanche-mainnet",
+     BASE = "base-mainnet",
+-    BASE_GOERLI = "base-goerli"
++    BASE_GOERLI = "base-goerli",
++    HARMONY = "harmony"
+ }
+ export declare enum NativeCurrencyName {
+     ETHER = "ETH",
+@@ -30,7 +31,8 @@ export declare enum NativeCurrencyName {
+     GNOSIS = "XDAI",
+     MOONBEAM = "GLMR",
+     BNB = "BNB",
+-    AVALANCHE = "AVAX"
++    AVALANCHE = "AVAX",
++    HARMONY = "ONE"
+ }
+ export declare const NATIVE_NAMES_BY_ID: {
+     [chainId: number]: string[];
+diff --git a/node_modules/@uniswap/smart-order-router/build/module/util/chains.js b/node_modules/@uniswap/smart-order-router/build/module/util/chains.js
+index 78fd5d1..5c1e9ec 100644
+--- a/node_modules/@uniswap/smart-order-router/build/module/util/chains.js
++++ b/node_modules/@uniswap/smart-order-router/build/module/util/chains.js
+@@ -15,6 +15,7 @@ export const SUPPORTED_CHAINS = [
+     ChainId.BNB,
+     ChainId.AVALANCHE,
+     ChainId.BASE,
++    ChainId.HARMONY
+     // Gnosis and Moonbeam don't yet have contracts deployed yet
+ ];
+ export const V2_SUPPORTED = [
+@@ -74,6 +75,8 @@ export const ID_TO_CHAIN_ID = (id) => {
+             return ChainId.BASE;
+         case 84531:
+             return ChainId.BASE_GOERLI;
++        case 1666600000:
++            return ChainId.HARMONY;
+         default:
+             throw new Error(`Unknown chain id: ${id}`);
+     }
+@@ -97,6 +100,7 @@ export var ChainName;
+     ChainName["AVALANCHE"] = "avalanche-mainnet";
+     ChainName["BASE"] = "base-mainnet";
+     ChainName["BASE_GOERLI"] = "base-goerli";
++    ChainName["HARMONY"] = "harmony";
+ })(ChainName || (ChainName = {}));
+ export var NativeCurrencyName;
+ (function (NativeCurrencyName) {
+@@ -108,6 +112,7 @@ export var NativeCurrencyName;
+     NativeCurrencyName["MOONBEAM"] = "GLMR";
+     NativeCurrencyName["BNB"] = "BNB";
+     NativeCurrencyName["AVALANCHE"] = "AVAX";
++    NativeCurrencyName["HARMONY"] = "ONE";
+ })(NativeCurrencyName || (NativeCurrencyName = {}));
+ export const NATIVE_NAMES_BY_ID = {
+     [ChainId.MAINNET]: [
+@@ -115,6 +120,7 @@ export const NATIVE_NAMES_BY_ID = {
+         'ETHER',
+         '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+     ],
++    [ChainId.HARMONY]: ['ONE'],
+     [ChainId.GOERLI]: [
+         'ETH',
+         'ETHER',
+@@ -189,6 +195,7 @@ export const NATIVE_CURRENCY = {
+     [ChainId.BNB]: NativeCurrencyName.BNB,
+     [ChainId.AVALANCHE]: NativeCurrencyName.AVALANCHE,
+     [ChainId.BASE]: NativeCurrencyName.ETHER,
++    [ChainId.HARMONY]: NativeCurrencyName.HARMONY,
+ };
+ export const ID_TO_NETWORK_NAME = (id) => {
+     switch (id) {
+@@ -226,6 +233,8 @@ export const ID_TO_NETWORK_NAME = (id) => {
+             return ChainName.BASE;
+         case 84531:
+             return ChainName.BASE_GOERLI;
++        case 1666600000:
++            return ChainName.HARMONY;
+         default:
+             throw new Error(`Unknown chain id: ${id}`);
+     }
+@@ -261,6 +270,8 @@ export const ID_TO_PROVIDER = (id) => {
+             return process.env.JSON_RPC_PROVIDER_AVALANCHE;
+         case ChainId.BASE:
+             return process.env.JSON_RPC_PROVIDER_BASE;
++        case ChainId.HARMONY:
++            return process.env.JSON_RPC_PROVIDER_HARMONY;
+         default:
+             throw new Error(`Chain id: ${id} not supported`);
+     }
+@@ -283,7 +294,8 @@ export const WRAPPED_NATIVE_CURRENCY = {
+     [ChainId.MOONBEAM]: new Token(ChainId.MOONBEAM, '0xAcc15dC74880C9944775448304B263D191c6077F', 18, 'WGLMR', 'Wrapped GLMR'),
+     [ChainId.AVALANCHE]: new Token(ChainId.AVALANCHE, '0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7', 18, 'WAVAX', 'Wrapped AVAX'),
+     [ChainId.BASE]: new Token(ChainId.BASE, '0x4200000000000000000000000000000000000006', 18, 'WETH', 'Wrapped Ether'),
+-    [ChainId.BASE_GOERLI]: new Token(ChainId.BASE_GOERLI, '0x4200000000000000000000000000000000000006', 18, 'WETH', 'Wrapped Ether')
++    [ChainId.BASE_GOERLI]: new Token(ChainId.BASE_GOERLI, '0x4200000000000000000000000000000000000006', 18, 'WETH', 'Wrapped Ether'),
++    [ChainId.HARMONY]: new Token(ChainId.HARMONY, '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a', 18, 'WONE', 'Wrapped ONE'),
+ };
+ function isMatic(chainId) {
+     return chainId === ChainId.POLYGON_MUMBAI || chainId === ChainId.POLYGON;
+@@ -307,6 +319,30 @@ class MaticNativeCurrency extends NativeCurrency {
+         super(chainId, 18, 'MATIC', 'Polygon Matic');
+     }
+ }
++
++function isHarmony(chainId) {
++    return chainId === ChainId.HARMONY;
++}
++class HarmonyNativeCurrency extends NativeCurrency {
++    equals(other) {
++        return other.isNative && other.chainId === this.chainId;
++    }
++    get wrapped() {
++        if (!isHarmony(this.chainId))
++            throw new Error('Not harmony');
++        const nativeCurrency = WRAPPED_NATIVE_CURRENCY[this.chainId];
++        if (nativeCurrency) {
++            return nativeCurrency;
++        }
++        throw new Error(`Does not support this chain ${this.chainId}`);
++    }
++    constructor(chainId) {
++        if (!isHarmony(chainId))
++            throw new Error('Not harmony');
++        super(chainId, 18, 'ONE', 'ONE');
++    }
++}
++
+ function isCelo(chainId) {
+     return chainId === ChainId.CELO_ALFAJORES || chainId === ChainId.CELO;
+ }
+@@ -453,6 +489,9 @@ export function nativeOnChain(chainId) {
+     else if (isAvax(chainId)) {
+         cachedNativeCurrency[chainId] = new AvalancheNativeCurrency(chainId);
+     }
++    else if (isHarmony(chainId)) {
++        cachedNativeCurrency[chainId] = new HarmonyNativeCurrency(chainId);
++    }
+     else {
+         cachedNativeCurrency[chainId] = ExtendedEther.onChain(chainId);
+     }

